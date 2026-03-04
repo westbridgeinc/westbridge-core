@@ -1,73 +1,275 @@
-const STATS = [
-  { label: "This month", value: "GYD 2.1M" },
-  { label: "Pending", value: "47" },
-  { label: "Total", value: "312" },
-];
+"use client";
 
-const ROWS = [
-  { date: "28 Feb 2026", description: "Office supplies", category: "Administration", amount: "45,000", by: "Priya Ramdeen", status: "Approved" },
-  { date: "27 Feb 2026", description: "Client dinner", category: "Travel", amount: "128,000", by: "Devendra Singh", status: "Pending" },
-  { date: "26 Feb 2026", description: "Software license", category: "IT", amount: "89,000", by: "Shantelle Williams", status: "Approved" },
-  { date: "25 Feb 2026", description: "Fuel", category: "Travel", amount: "32,000", by: "Rajiv Persaud", status: "Rejected" },
-  { date: "24 Feb 2026", description: "Training course", category: "Professional Development", amount: "156,000", by: "Camille Thomas", status: "Pending" },
-  { date: "23 Feb 2026", description: "Equipment repair", category: "Maintenance", amount: "78,000", by: "Akash Doobay", status: "Approved" },
-];
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { Receipt } from "lucide-react";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { SkeletonCard } from "@/components/ui/Skeleton";
+import { formatCurrency } from "@/lib/locale/currency";
+import { formatDate } from "@/lib/locale/date";
 
-function Badge({ status }: { status: string }) {
-  const s: Record<string, string> = {
-    Approved: "bg-green-50 text-green-700",
-    Pending: "bg-yellow-50 text-yellow-700",
-    Rejected: "bg-red-50 text-red-700",
+/* ------------------------------------------------------------------ */
+/*  Types                                                              */
+/* ------------------------------------------------------------------ */
+
+type ExpenseRow = {
+  name: string;
+  postingDate: string;
+  description: string;
+  category: string;
+  amount: number;
+  submittedBy: string;
+  status: string;
+};
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+function mapErpExpense(d: Record<string, unknown>): ExpenseRow {
+  const amount = Number(
+    d.total_sanctioned_amount ?? d.total_claimed_amount ?? d.grand_total ?? 0
+  );
+  return {
+    name: String(d.name ?? ""),
+    postingDate: String(d.posting_date ?? d.creation ?? ""),
+    description: String(d.remark ?? d.employee_remarks ?? "Expense claim"),
+    category: String(d.expense_type ?? "\u2014"),
+    amount,
+    submittedBy: String(d.employee_name ?? d.owner ?? "\u2014"),
+    status: String(d.status ?? "Draft").trim(),
   };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Table columns                                                      */
+/* ------------------------------------------------------------------ */
+
+const expenseColumns: Column<ExpenseRow>[] = [
+  {
+    id: "date",
+    header: "Date",
+    accessor: (row) => (row.postingDate ? formatDate(row.postingDate) : "\u2014"),
+    sortValue: (row) => row.postingDate || "",
+    width: "120px",
+  },
+  {
+    id: "description",
+    header: "Description",
+    accessor: (row) => row.description,
+    sortValue: (row) => row.description,
+  },
+  {
+    id: "category",
+    header: "Category",
+    accessor: (row) => (
+      <span style={{ color: "var(--color-ink-secondary)" }}>{row.category}</span>
+    ),
+    sortValue: (row) => row.category,
+    width: "140px",
+  },
+  {
+    id: "amount",
+    header: "Amount",
+    accessor: (row) => (
+      <span className="font-medium" style={{ color: "var(--color-ink)" }}>
+        {row.amount > 0 ? formatCurrency(row.amount, "USD") : "\u2014"}
+      </span>
+    ),
+    sortValue: (row) => row.amount,
+    align: "right",
+    width: "140px",
+  },
+  {
+    id: "submittedBy",
+    header: "Submitted By",
+    accessor: (row) => (
+      <span style={{ color: "var(--color-ink-secondary)" }}>{row.submittedBy}</span>
+    ),
+    sortValue: (row) => row.submittedBy,
+    width: "160px",
+  },
+  {
+    id: "status",
+    header: "Status",
+    accessor: (row) => <Badge status={row.status}>{row.status}</Badge>,
+    sortValue: (row) => row.status,
+    width: "120px",
+  },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Metric card                                                        */
+/* ------------------------------------------------------------------ */
+
+function MetricCard({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number;
+}) {
   return (
-    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${s[status] || "bg-gray-100 text-gray-600"}`}>
-      {status}
-    </span>
+    <div
+      className="rounded-xl border px-6 py-4"
+      style={{
+        borderColor: "var(--color-border)",
+        background: "var(--color-ground-elevated)",
+      }}
+    >
+      <p className="text-sm" style={{ color: "var(--color-ink-tertiary)" }}>
+        {label}
+      </p>
+      <p
+        className="mt-1 text-xl font-semibold"
+        style={{ color: "var(--color-ink)" }}
+      >
+        {value}
+      </p>
+    </div>
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  Page                                                               */
+/* ------------------------------------------------------------------ */
+
 export default function ExpensesPage() {
+  const [rows, setRows] = useState<ExpenseRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [fetchKey, setFetchKey] = useState(0);
+
+  const retry = useCallback(() => {
+    setError(null);
+    setLoading(true);
+    setFetchKey((k) => k + 1);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/erp/list?doctype=Expense%20Claim")
+      .then((res) => {
+        if (res.status === 401) {
+          throw new Error("Session expired. Please sign in again.");
+        }
+        if (!res.ok) throw new Error("Failed to load expense claims.");
+        return res.json();
+      })
+      .then((json) => {
+        if (cancelled) return;
+        const raw = (json?.data ?? []) as Record<string, unknown>[];
+        setRows(raw.map(mapErpExpense));
+      })
+      .catch((err: Error) => {
+        if (!cancelled) {
+          setError(err.message);
+          setRows([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchKey]);
+
+  const totalAmount = useMemo(
+    () => rows.reduce((sum, r) => sum + r.amount, 0),
+    [rows]
+  );
+  const pendingCount = useMemo(
+    () => rows.filter((r) => r.status === "Pending").length,
+    [rows]
+  );
+
+  /* ---------- Error state ---------- */
+  if (error) {
+    return (
+      <div>
+        <PageHeader title="Expenses" description="Expense claims and approvals" />
+        <div
+          className="mt-6 rounded-xl border p-6 text-center"
+          style={{
+            borderColor: "var(--color-border)",
+            background: "var(--color-ground-elevated)",
+          }}
+        >
+          <div
+            className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl"
+            style={{ background: "rgb(239 68 68 / 0.1)", color: "var(--color-error)" }}
+          >
+            <Receipt className="h-6 w-6" />
+          </div>
+          <p className="text-sm font-medium" style={{ color: "var(--color-ink)" }}>
+            Something went wrong
+          </p>
+          <p className="mt-1 text-sm" style={{ color: "var(--color-ink-tertiary)" }}>
+            {error}
+          </p>
+          <div className="mt-4">
+            <Button variant="primary" size="sm" onClick={retry}>
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ---------- Main render ---------- */
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-black">Expenses</h1>
-      <p className="text-sm text-gray-500">Expense claims and approvals</p>
+      <PageHeader title="Expenses" description="Expense claims and approvals" />
 
-      <div className="mt-6 flex gap-6">
-        {STATS.map((s) => (
-          <div key={s.label} className="rounded-xl border border-gray-100 bg-white px-6 py-4">
-            <p className="text-sm text-gray-500">{s.label}</p>
-            <p className="text-xl font-semibold text-black">{s.value}</p>
-          </div>
-        ))}
-      </div>
+      {/* Metric cards */}
+      {loading ? (
+        <div className="mt-6 flex gap-6">
+          <SkeletonCard className="flex-1" />
+          <SkeletonCard className="flex-1" />
+          <SkeletonCard className="flex-1" />
+        </div>
+      ) : (
+        <div className="mt-6 flex gap-6">
+          <MetricCard
+            label="Total claims"
+            value={formatCurrency(totalAmount, "USD")}
+          />
+          <MetricCard label="Pending" value={pendingCount} />
+          <MetricCard label="Total" value={rows.length} />
+        </div>
+      )}
 
-      <div className="mt-6 overflow-hidden rounded-xl border border-gray-100 bg-white">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-100 bg-gray-50 text-left">
-              <th className="py-3 pl-6 text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-              <th className="py-3 px-4 text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
-              <th className="py-3 px-4 text-xs font-medium uppercase tracking-wider text-gray-500">Category</th>
-              <th className="py-3 px-4 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
-              <th className="py-3 px-4 text-xs font-medium uppercase tracking-wider text-gray-500">Submitted By</th>
-              <th className="py-3 pr-6 pl-4 text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ROWS.map((r, i) => (
-              <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
-                <td className="py-3 pl-6 text-gray-900">{r.date}</td>
-                <td className="py-3 px-4 text-gray-900">{r.description}</td>
-                <td className="py-3 px-4 text-gray-600">{r.category}</td>
-                <td className="py-3 px-4 text-right font-medium text-black">GYD {r.amount}</td>
-                <td className="py-3 px-4 text-gray-600">{r.by}</td>
-                <td className="py-3 pr-6 pl-4">
-                  <Badge status={r.status} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Data table */}
+      <div className="mt-6">
+        <DataTable<ExpenseRow>
+          columns={expenseColumns}
+          data={rows}
+          keyExtractor={(row) => row.name}
+          loading={loading}
+          emptyTitle="No expense claims"
+          emptyDescription="Submit your first expense claim to get started."
+          emptyState={
+            <div
+              className="rounded-xl border"
+              style={{
+                borderColor: "var(--color-border)",
+                background: "var(--color-ground-elevated)",
+              }}
+            >
+              <EmptyState
+                icon={<Receipt className="h-6 w-6" />}
+                title="No expense claims"
+                description="Submit your first expense claim to get started."
+              />
+            </div>
+          }
+          pageSize={20}
+        />
       </div>
     </div>
   );

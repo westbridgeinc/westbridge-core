@@ -1,70 +1,252 @@
-const STATS = [
-  { label: "Items", value: "1,247" },
-  { label: "Low Stock", value: "23", highlight: "yellow" },
-  { label: "Out of Stock", value: "8", highlight: "red" },
+"use client";
+
+import { useState, useEffect, useMemo } from "react";
+import { Package } from "lucide-react";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { MetricCard } from "@/components/dashboard/MetricCard";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { SkeletonTable } from "@/components/ui/SkeletonTable";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { formatCurrency } from "@/lib/locale/currency";
+
+/* ------------------------------------------------------------------ */
+/*  Types                                                              */
+/* ------------------------------------------------------------------ */
+
+interface InventoryItem {
+  id: string;
+  item: string;
+  warehouse: string;
+  qty: number;
+  value: number;
+  uom: string;
+  status: "In Stock" | "Low Stock" | "Out of Stock";
+}
+
+interface InventoryStats {
+  totalItems: number;
+  lowStock: number;
+  outOfStock: number;
+  totalValue: number;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Badge variant mapping for inventory-specific statuses              */
+/* ------------------------------------------------------------------ */
+
+function inventoryBadgeVariant(status: string): "success" | "warning" | "error" {
+  if (status === "Out of Stock") return "error";
+  if (status === "Low Stock") return "warning";
+  return "success";
+}
+
+/* ------------------------------------------------------------------ */
+/*  Demo data (swap for API call in production)                        */
+/* ------------------------------------------------------------------ */
+
+const DEMO_ITEMS: InventoryItem[] = [
+  { id: "ITM-001", item: "Portland Cement", warehouse: "Georgetown Main", qty: 450, value: 2250000, uom: "Bags", status: "In Stock" },
+  { id: "ITM-002", item: "Demerara Gold Rum", warehouse: "Demerara Warehouse", qty: 12, value: 480000, uom: "Cases", status: "Low Stock" },
+  { id: "ITM-003", item: "Galvanize Sheets", warehouse: "Georgetown Main", qty: 0, value: 0, uom: "Sheets", status: "Out of Stock" },
+  { id: "ITM-004", item: "Basmati Rice", warehouse: "Berbice Store", qty: 320, value: 1280000, uom: "Bags", status: "In Stock" },
+  { id: "ITM-005", item: "Car Battery", warehouse: "Georgetown Main", qty: 8, value: 320000, uom: "Units", status: "Low Stock" },
+  { id: "ITM-006", item: "Printer Paper", warehouse: "Head Office", qty: 85, value: 85000, uom: "Reams", status: "In Stock" },
+  { id: "ITM-007", item: "Safety Helmets", warehouse: "Georgetown Main", qty: 0, value: 0, uom: "Units", status: "Out of Stock" },
+  { id: "ITM-008", item: "Diesel Fuel", warehouse: "Fuel Depot", qty: 1200, value: 3600000, uom: "Litres", status: "In Stock" },
 ];
 
-const ITEMS = [
-  { code: "ITM-001", name: "Portland Cement", category: "Building", inStock: 450, reorderLevel: 200, value: "2,250,000", status: "In Stock" },
-  { code: "ITM-002", name: "Demerara Gold Rum", category: "Beverages", inStock: 12, reorderLevel: 25, value: "480,000", status: "Low Stock" },
-  { code: "ITM-003", name: "Galvanize Sheets", category: "Building", inStock: 0, reorderLevel: 50, value: "0", status: "Out of Stock" },
-  { code: "ITM-004", name: "Basmati Rice", category: "Food", inStock: 320, reorderLevel: 100, value: "1,280,000", status: "In Stock" },
-  { code: "ITM-005", name: "Car Battery", category: "Auto", inStock: 8, reorderLevel: 15, value: "320,000", status: "Low Stock" },
-  { code: "ITM-006", name: "Printer Paper", category: "Office", inStock: 85, reorderLevel: 30, value: "85,000", status: "In Stock" },
-  { code: "ITM-007", name: "Safety Helmets", category: "PPE", inStock: 0, reorderLevel: 40, value: "0", status: "Out of Stock" },
-  { code: "ITM-008", name: "Diesel Fuel", category: "Fuel", inStock: 1200, reorderLevel: 500, value: "3,600,000", status: "In Stock" },
+function deriveStats(items: InventoryItem[]): InventoryStats {
+  return items.reduce(
+    (acc, item) => ({
+      totalItems: acc.totalItems + 1,
+      lowStock: acc.lowStock + (item.status === "Low Stock" ? 1 : 0),
+      outOfStock: acc.outOfStock + (item.status === "Out of Stock" ? 1 : 0),
+      totalValue: acc.totalValue + item.value,
+    }),
+    { totalItems: 0, lowStock: 0, outOfStock: 0, totalValue: 0 },
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Columns                                                            */
+/* ------------------------------------------------------------------ */
+
+const columns: Column<InventoryItem>[] = [
+  {
+    id: "item",
+    header: "Item",
+    accessor: (row) => (
+      <span className="font-medium" style={{ color: "var(--color-ink)" }}>
+        {row.item}
+      </span>
+    ),
+    sortValue: (row) => row.item,
+  },
+  {
+    id: "warehouse",
+    header: "Warehouse",
+    accessor: (row) => (
+      <span style={{ color: "var(--color-ink-secondary)" }}>{row.warehouse}</span>
+    ),
+    sortValue: (row) => row.warehouse,
+  },
+  {
+    id: "qty",
+    header: "Qty",
+    align: "right",
+    accessor: (row) => (
+      <span style={{ color: "var(--color-ink-secondary)" }}>
+        {row.qty.toLocaleString()}
+      </span>
+    ),
+    sortValue: (row) => row.qty,
+  },
+  {
+    id: "value",
+    header: "Value",
+    align: "right",
+    accessor: (row) => (
+      <span className="font-medium" style={{ color: "var(--color-ink)" }}>
+        {formatCurrency(row.value)}
+      </span>
+    ),
+    sortValue: (row) => row.value,
+  },
+  {
+    id: "uom",
+    header: "UOM",
+    accessor: (row) => (
+      <span style={{ color: "var(--color-ink-tertiary)" }}>{row.uom}</span>
+    ),
+    sortValue: (row) => row.uom,
+  },
+  {
+    id: "status",
+    header: "Status",
+    accessor: (row) => (
+      <Badge variant={inventoryBadgeVariant(row.status)}>{row.status}</Badge>
+    ),
+    sortValue: (row) =>
+      row.status === "Out of Stock" ? 0 : row.status === "Low Stock" ? 1 : 2,
+  },
 ];
+
+/* ------------------------------------------------------------------ */
+/*  Page component                                                     */
+/* ------------------------------------------------------------------ */
 
 export default function InventoryPage() {
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchInventory = () => {
+    setLoading(true);
+    setError(null);
+
+    // Simulate async fetch -- replace with real API call
+    const timer = setTimeout(() => {
+      try {
+        setItems(DEMO_ITEMS);
+      } catch {
+        setError("Failed to load inventory data.");
+      } finally {
+        setLoading(false);
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
+  };
+
+  useEffect(() => {
+    const cleanup = fetchInventory();
+    return cleanup;
+  }, []);
+
+  const stats = useMemo(() => deriveStats(items), [items]);
+
+  /* ---- Error state ---- */
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Inventory" description="Stock levels and warehouse management" />
+        <div
+          className="flex flex-col items-center gap-4 rounded-[var(--radius-md)] border px-6 py-16 text-center"
+          style={{
+            borderColor: "var(--color-border)",
+            background: "var(--color-ground-elevated)",
+          }}
+        >
+          <p className="text-body" style={{ color: "var(--color-ink-secondary)" }}>
+            {error}
+          </p>
+          <Button variant="secondary" size="sm" onClick={fetchInventory}>
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ---- Loading state ---- */
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Inventory" description="Stock levels and warehouse management" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="card animate-pulse"
+              style={{ minHeight: 88 }}
+            />
+          ))}
+        </div>
+        <SkeletonTable rows={8} columns={6} />
+      </div>
+    );
+  }
+
+  /* ---- Success / Empty states ---- */
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-black">Inventory</h1>
-      <p className="text-sm text-gray-500">Stock levels and reorder management</p>
+    <div className="space-y-6">
+      <PageHeader title="Inventory" description="Stock levels and warehouse management" />
 
-      <div className="mt-6 flex gap-6">
-        {STATS.map((s) => (
-          <div key={s.label} className="rounded-xl border border-gray-100 bg-white px-6 py-4">
-            <p className="text-sm text-gray-500">{s.label}</p>
-            <p className={`text-xl font-semibold ${s.highlight === "red" ? "text-red-600" : s.highlight === "yellow" ? "text-yellow-600" : "text-black"}`}>
-              {s.value}
-            </p>
-          </div>
-        ))}
+      {/* Metric cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+        <MetricCard label="Total Items" value={stats.totalItems} />
+        <MetricCard
+          label="Low Stock"
+          value={stats.lowStock}
+          subtextVariant={stats.lowStock > 0 ? "error" : "muted"}
+        />
+        <MetricCard
+          label="Out of Stock"
+          value={stats.outOfStock}
+          subtextVariant={stats.outOfStock > 0 ? "error" : "muted"}
+        />
+        <MetricCard label="Total Value" value={formatCurrency(stats.totalValue)} />
       </div>
 
-      <div className="mt-6 overflow-x-auto overflow-hidden rounded-xl border border-gray-100 bg-white">
-        <table className="w-full min-w-[700px] text-sm">
-          <thead>
-            <tr className="border-b border-gray-100 bg-gray-50 text-left">
-              <th className="py-3 pl-6 text-xs font-medium uppercase tracking-wider text-gray-500">Item Code</th>
-              <th className="py-3 px-4 text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
-              <th className="py-3 px-4 text-xs font-medium uppercase tracking-wider text-gray-500">Category</th>
-              <th className="py-3 px-4 text-right text-xs font-medium uppercase tracking-wider text-gray-500">In Stock</th>
-              <th className="py-3 px-4 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Reorder Level</th>
-              <th className="py-3 px-4 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Value</th>
-              <th className="py-3 pr-6 pl-4 text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ITEMS.map((r, i) => (
-              <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
-                <td className="py-3 pl-6 font-medium text-black">{r.code}</td>
-                <td className="py-3 px-4 text-gray-900">{r.name}</td>
-                <td className="py-3 px-4 text-gray-600">{r.category}</td>
-                <td className="py-3 px-4 text-right text-gray-900">{r.inStock}</td>
-                <td className="py-3 px-4 text-right text-gray-600">{r.reorderLevel}</td>
-                <td className="py-3 px-4 text-right font-medium text-black">GYD {r.value}</td>
-                <td className="py-3 pr-6 pl-4">
-                  <span className={
-                    r.status === "Out of Stock" ? "text-red-600" :
-                    r.status === "Low Stock" ? "text-yellow-600" : "text-green-600"
-                  }>{r.status}</span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Data table */}
+      <DataTable<InventoryItem>
+        columns={columns}
+        data={items}
+        keyExtractor={(r) => r.id}
+        loading={false}
+        emptyState={
+          <EmptyState
+            icon={<Package className="h-6 w-6" />}
+            title="No inventory items"
+            description="Your inventory is empty. Add items to start tracking stock levels and values."
+            actionLabel="Add Item"
+            onAction={() => {}}
+          />
+        }
+        pageSize={20}
+      />
     </div>
   );
 }

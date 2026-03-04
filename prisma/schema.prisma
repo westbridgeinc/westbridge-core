@@ -1,0 +1,122 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Account {
+  id               String   @id @default(cuid())
+  email            String   @unique
+  companyName      String   @map("company_name")
+  plan             String   // Starter | Growth | Business
+  status           String   @default("pending") // pending | active | past_due | canceled
+  twocoOrderId     String?  @map("twoco_order_id")
+  twocoCustomerId  String?  @map("twoco_customer_id")
+  modulesSelected  String[] @map("modules_selected") // module ids
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  users        User[]
+  subscriptions Subscription[]
+  auditLogs    AuditLog[]
+  apiKeys      ApiKey[]
+
+  @@map("accounts")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  accountId    String   @map("account_id")
+  email        String
+  name         String?
+  role         String   // "owner" | "admin" | "member"
+  passwordHash String?  @map("password_hash")
+  status       String   @default("active") // active | suspended | invited
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  account  Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  sessions Session[]
+
+  @@unique([accountId, email])
+  @@index([accountId])
+  @@index([email])
+  @@map("users")
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  token      String   @unique // SHA-256 hash of the raw token
+  erpnextSid String?  @map("erpnext_sid") // ERPNext session for API proxy
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([expiresAt])
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Subscription {
+  id                    String    @id @default(cuid())
+  accountId             String    @map("account_id")
+  planId                String    @map("plan_id") // Starter | Growth | Business etc.
+  status                String    // active | canceled | past_due | trialing
+  currentPeriodStart    DateTime  @map("current_period_start")
+  currentPeriodEnd      DateTime  @map("current_period_end")
+  twocoSubscriptionId   String?   @map("twoco_subscription_id")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([twocoSubscriptionId])
+  @@map("subscriptions")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  accountId  String   @map("account_id")
+  userId     String?  @map("user_id")
+  action     String   // login | logout | signup | invoice.create | settings.update etc.
+  resource   String?
+  resourceId String?  @map("resource_id")
+  metadata   Json?
+  ipAddress  String?  @map("ip_address")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, createdAt])
+  @@index([userId])
+  @@map("audit_logs")
+}
+
+model ApiKey {
+  id        String    @id @default(cuid())
+  accountId String    @map("account_id")
+  keyHash   String    @map("key_hash") // hash of the raw key
+  prefix    String    // first few chars for display (e.g. wb_xxxx)
+  label     String?
+  lastUsedAt DateTime? @map("last_used_at")
+  expiresAt  DateTime? @map("expires_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([keyHash])
+  @@index([accountId])
+  @@map("api_keys")
+}

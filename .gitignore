@@ -20,6 +20,9 @@
 # production
 /build
 
+# python / semgrep
+.venv/
+
 # misc
 .DS_Store
 *.pem

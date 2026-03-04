@@ -1,0 +1,77 @@
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { checkRateLimit, getClientIdentifier } from "@/lib/ratelimit";
+import { createAccount } from "@/lib/services/billing.service";
+import { logAction } from "@/lib/services/audit.service";
+import { apiSuccess, apiError, apiMeta, getRequestId } from "@/types/api";
+import { signupBodySchema } from "@/types/schemas/signup";
+import { validateCsrf, CSRF_COOKIE_NAME } from "@/lib/csrf";
+import { RATE_LIMIT } from "@/lib/constants";
+
+export async function POST(request: Request) {
+  const requestId = getRequestId(request);
+  const meta = () => apiMeta({ request_id: requestId });
+  const id = getClientIdentifier(request);
+  const { allowed } = await checkRateLimit(`signup:${id}`, RATE_LIMIT.SIGNUP_PER_MINUTE);
+  if (!allowed) {
+    return NextResponse.json(
+      apiError("RATE_LIMIT", "Too many signup attempts. Try again in a minute.", undefined, meta()),
+      { status: 429 }
+    );
+  }
+
+  const cookieStore = await cookies();
+  const csrfCookie = cookieStore.get(CSRF_COOKIE_NAME)?.value;
+  const csrfHeader = request.headers.get("x-csrf-token") ?? request.headers.get("X-CSRF-Token");
+  if (!validateCsrf(csrfHeader, csrfCookie)) {
+    return NextResponse.json(
+      apiError("FORBIDDEN", "Invalid or missing CSRF token.", undefined, meta()),
+      { status: 403 }
+    );
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      apiError("INVALID_JSON", "Invalid request body", undefined, meta()),
+      { status: 400 }
+    );
+  }
+
+  const parsed = signupBodySchema.safeParse(body);
+  if (!parsed.success) {
+    const first = parsed.error.flatten().fieldErrors;
+    const message = first.email?.[0] ?? first.companyName?.[0] ?? first.plan?.[0] ?? "Invalid request";
+    return NextResponse.json(
+      apiError("VALIDATION_ERROR", message, undefined, meta()),
+      { status: 400 }
+    );
+  }
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const result = await createAccount(parsed.data, baseUrl);
+
+  if (!result.ok) {
+    const status =
+      result.error === "An account with this email already exists. Please sign in." ? 409
+      : result.error === "Email, company name, and plan are required" || result.error === "Invalid plan" ? 400
+      : 500;
+    const { logger } = await import("@/lib/logger");
+    if (status === 500) logger.error("Signup API error", { error: result.error, request_id: requestId });
+    return NextResponse.json(
+      apiError("SIGNUP_FAILED", result.error, undefined, meta()),
+      { status }
+    );
+  }
+
+  void logAction({
+    accountId: result.data.accountId,
+    action: "signup",
+    metadata: { email: parsed.data.email, plan: parsed.data.plan },
+    ipAddress: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? undefined,
+  });
+
+  return NextResponse.json(apiSuccess(result.data, meta()));
+}

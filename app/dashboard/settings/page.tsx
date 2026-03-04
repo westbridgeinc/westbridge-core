@@ -1,83 +1,96 @@
 "use client";
 
 import { useState } from "react";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { Tabs } from "@/components/ui/Tabs";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { Button } from "@/components/ui/Button";
 
-const TABS = ["General", "Billing", "Team", "Modules", "API", "Notifications"];
+const TAB_ITEMS = [
+  { id: "general", label: "General" },
+  { id: "billing", label: "Billing" },
+  { id: "team", label: "Team" },
+  { id: "modules", label: "Modules" },
+  { id: "api", label: "API" },
+  { id: "notifications", label: "Notifications" },
+];
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState("General");
+  const [tab, setTab] = useState("general");
+  const [company, setCompany] = useState("Acme Industries Inc.");
+  const [email, setEmail] = useState("admin@acme.gy");
+  const [country, setCountry] = useState("Guyana");
+  const [currency, setCurrency] = useState("GYD");
+  const [timezone, setTimezone] = useState("America/Guyana");
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-black">Settings</h1>
-      <p className="text-sm text-gray-500">Manage your account and preferences</p>
+      <PageHeader title="Settings" description="Manage your account and preferences" />
 
-      <div className="mt-8 flex gap-8">
-        <div className="w-48 shrink-0">
-          <nav className="flex flex-col gap-0.5">
-            {TABS.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`rounded-md px-3 py-2 text-left text-sm ${
-                  activeTab === tab
-                    ? "bg-gray-100 font-medium text-black"
-                    : "text-gray-600 hover:bg-gray-50"
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </nav>
-        </div>
-        <div className="min-w-0 flex-1 rounded-xl border border-gray-100 bg-white p-6">
-          {activeTab === "General" && (
-            <form className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Company name</label>
-                <input
-                  type="text"
-                  defaultValue="Georgetown Hardware Ltd"
-                  className="mt-1 w-full rounded-md border border-gray-200 px-4 py-3 text-sm outline-none focus:border-black focus:ring-1 focus:ring-black"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Country</label>
-                <select className="mt-1 w-full rounded-md border border-gray-200 px-4 py-3 text-sm outline-none focus:border-black focus:ring-1 focus:ring-black">
-                  <option>Guyana</option>
-                  <option>Trinidad and Tobago</option>
-                  <option>Jamaica</option>
-                  <option>Barbados</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Currency</label>
-                <input
-                  type="text"
-                  defaultValue="GYD"
-                  className="mt-1 w-full rounded-md border border-gray-200 px-4 py-3 text-sm outline-none focus:border-black focus:ring-1 focus:ring-black"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Timezone</label>
-                <select className="mt-1 w-full rounded-md border border-gray-200 px-4 py-3 text-sm outline-none focus:border-black focus:ring-1 focus:ring-black">
-                  <option>America/Guyana</option>
-                  <option>America/Port_of_Spain</option>
-                  <option>America/Jamaica</option>
-                </select>
-              </div>
-              <button
-                type="button"
-                className="rounded-md bg-black px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition"
-              >
-                Save changes
-              </button>
-            </form>
-          )}
-          {activeTab !== "General" && (
-            <p className="text-sm text-gray-500">This section is not yet configured.</p>
-          )}
-        </div>
+      <div className="mt-8">
+        <Tabs items={TAB_ITEMS} activeId={tab} onChange={setTab} />
+      </div>
+
+      <div
+        className="mt-6 rounded-[var(--radius-md)] border p-6"
+        style={{ borderColor: "var(--color-border)", background: "var(--color-ground-elevated)" }}
+      >
+        {tab === "general" && (
+          <form className="max-w-lg space-y-5" onSubmit={(e) => e.preventDefault()}>
+            <Input label="Company name" value={company} onChange={(e) => setCompany(e.target.value)} />
+            <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Select
+              label="Country"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              options={[
+                { value: "Guyana", label: "Guyana" },
+                { value: "Trinidad and Tobago", label: "Trinidad and Tobago" },
+                { value: "Jamaica", label: "Jamaica" },
+                { value: "Barbados", label: "Barbados" },
+                { value: "Suriname", label: "Suriname" },
+                { value: "United States", label: "United States" },
+              ]}
+            />
+            <Select
+              label="Currency"
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              options={[
+                { value: "GYD", label: "GYD — Guyanese Dollar" },
+                { value: "USD", label: "USD — US Dollar" },
+                { value: "TTD", label: "TTD — Trinidad Dollar" },
+                { value: "BBD", label: "BBD — Barbados Dollar" },
+                { value: "JMD", label: "JMD — Jamaican Dollar" },
+              ]}
+            />
+            <Select
+              label="Timezone"
+              value={timezone}
+              onChange={(e) => setTimezone(e.target.value)}
+              options={[
+                { value: "America/Guyana", label: "America/Guyana (UTC-4)" },
+                { value: "America/Port_of_Spain", label: "America/Port_of_Spain (UTC-4)" },
+                { value: "America/Jamaica", label: "America/Jamaica (UTC-5)" },
+                { value: "America/New_York", label: "America/New_York (UTC-5)" },
+              ]}
+            />
+            <div className="pt-2">
+              <Button variant="primary" size="md" type="submit">Save changes</Button>
+            </div>
+          </form>
+        )}
+        {tab !== "general" && (
+          <div className="flex flex-col items-center py-12">
+            <p className="text-h3 font-semibold" style={{ color: "var(--color-ink)" }}>
+              {TAB_ITEMS.find((t) => t.id === tab)?.label}
+            </p>
+            <p className="mt-2" style={{ color: "var(--color-ink-tertiary)", fontSize: "var(--font-body)" }}>
+              This section is coming soon.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
