@@ -1,10 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const createMock = vi.fn();
+const loggerErrorMock = vi.fn();
 vi.mock("@/lib/data/prisma", () => ({
   prisma: {
     auditLog: { create: createMock },
   },
+}));
+vi.mock("@/lib/logger", () => ({
+  logger: { error: loggerErrorMock, warn: vi.fn(), info: vi.fn() },
 }));
 
 describe("audit.service", () => {
@@ -55,5 +59,13 @@ describe("audit.service", () => {
         ipAddress: undefined,
       },
     });
+  });
+
+  it("logs error when prisma.auditLog.create rejects", async () => {
+    loggerErrorMock.mockClear();
+    createMock.mockRejectedValueOnce(new Error("DB error"));
+    const { logAction } = await import("./audit.service");
+    await logAction({ accountId: "acc-3", action: "login", ipAddress: "1.2.3.4" });
+    expect(loggerErrorMock).toHaveBeenCalledWith("Audit log write failed", expect.objectContaining({ action: "login" }));
   });
 });
