@@ -18,14 +18,16 @@ export function Skeleton({
 }: SkeletonProps) {
   return (
     <div
-      className={`animate-pulse rounded-[var(--radius-sm)] bg-[var(--color-ground-muted)] ${className}`}
+      className={`relative overflow-hidden animate-pulse rounded-[var(--radius-sm)] bg-[var(--color-ground-muted)] ${className}`}
       style={{
         width: width != null ? (typeof width === "number" ? `${width}px` : width) : undefined,
         height: height != null ? (typeof height === "number" ? `${height}px` : height) : undefined,
         ...style,
       }}
       {...props}
-    />
+    >
+      <div className="skeleton-shimmer-overlay" aria-hidden />
+    </div>
   );
 }
 

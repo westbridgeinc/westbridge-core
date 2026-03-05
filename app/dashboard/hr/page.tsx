@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Users } from "lucide-react";
+import { UserCog } from "lucide-react";
+import { MODULE_EMPTY_STATES, EMPTY_STATE_SUPPORT_LINE } from "@/lib/dashboard/empty-state-config";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { DataTable, type Column } from "@/components/ui/DataTable";
@@ -193,11 +194,12 @@ export default function HRPage() {
         loading={false}
         emptyState={
           <EmptyState
-            icon={<Users className="h-6 w-6" />}
-            title="No employees"
-            description="Your employee directory is empty. Add your first team member to get started."
-            actionLabel="Add Employee"
-            onAction={() => {}}
+            icon={<UserCog className="h-6 w-6" />}
+            title={MODULE_EMPTY_STATES.hr.title}
+            description={MODULE_EMPTY_STATES.hr.description}
+            actionLabel={MODULE_EMPTY_STATES.hr.actionLabel}
+            actionHref={MODULE_EMPTY_STATES.hr.actionLink}
+            supportLine={EMPTY_STATE_SUPPORT_LINE}
           />
         }
         pageSize={20}

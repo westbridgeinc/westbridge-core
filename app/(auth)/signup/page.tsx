@@ -35,6 +35,14 @@ function SignupContent() {
   const [submitting, setSubmitting] = useState(false);
   const [signupError, setSignupError] = useState<string | null>(null);
   const [csrfToken, setCsrfToken] = useState<string | null>(null);
+  const [step1Errors, setStep1Errors] = useState<{ company?: string; industry?: string }>({});
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [emailValid, setEmailValid] = useState(false);
+
+  const validateEmail = useCallback((value: string) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(value.trim());
+  }, []);
 
   const setStep = useCallback(
     (s: number) => {
@@ -84,7 +92,7 @@ function SignupContent() {
       <nav className="border-b" style={{ borderColor: "var(--color-border)", background: "var(--color-ground)" }}>
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link href={ROUTES.home} className="flex shrink-0 items-center">
-            <Image src={SITE.logoPath} alt={`${SITE.name} ${SITE.legal}`} width={140} height={42} className="h-9 w-auto object-contain" />
+            <Image src={SITE.logoPath} alt={`${SITE.name} ${SITE.legal}`} width={140} height={42} priority sizes="140px" className="h-9 w-auto object-contain" />
           </Link>
           <Link href={ROUTES.login} className="text-sm" style={{ color: "var(--color-ink-secondary)" }}>Sign in</Link>
         </div>
@@ -104,17 +112,34 @@ function SignupContent() {
         {step === 1 && (
           <div>
             <h1 className="text-2xl font-semibold" style={{ color: "var(--color-ink)" }}>Tell us about your business</h1>
-            <form className="mt-8 space-y-4">
+            <form
+              className="mt-8 space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const err: { company?: string; industry?: string } = {};
+                if (!company.trim()) err.company = "Required";
+                if (!industry) err.industry = "Required";
+                setStep1Errors(err);
+                if (Object.keys(err).length === 0) setStep(2);
+              }}
+            >
               <Input
                 label="Company name"
                 value={company}
-                onChange={(e) => setCompany(e.target.value)}
+                onChange={(e) => {
+                  setCompany(e.target.value);
+                  if (step1Errors.company) setStep1Errors((p) => ({ ...p, company: undefined }));
+                }}
                 placeholder="e.g. Acme Industries Inc."
+                error={step1Errors.company}
               />
               <Select
                 label="Industry"
                 value={industry}
-                onChange={(e) => setIndustry(e.target.value)}
+                onChange={(e) => {
+                  setIndustry(e.target.value);
+                  if (step1Errors.industry) setStep1Errors((p) => ({ ...p, industry: undefined }));
+                }}
                 options={[
                   { value: "", label: "Select industry" },
                   ...INDUSTRIES.map((i) => ({ value: i, label: i })),
@@ -135,7 +160,13 @@ function SignupContent() {
                   label: n === 100 ? "100+" : String(n),
                 }))}
               />
-              <Button variant="primary" size="md" type="button" onClick={() => setStep(2)} className="mt-6 w-full">
+              <Button
+                variant="primary"
+                size="md"
+                type="submit"
+                className="mt-6 w-full"
+                disabled={!company.trim() || !industry}
+              >
                 Continue
               </Button>
             </form>
@@ -152,7 +183,7 @@ function SignupContent() {
                   key={p.id}
                   type="button"
                   onClick={() => setPlanId(p.id)}
-                  className={`w-full rounded-xl border-2 p-4 text-left transition ${
+                  className={`w-full min-h-[44px] rounded-xl border-2 p-4 text-left transition ${
                     planId === p.id ? "border-[var(--color-primary)] bg-[var(--color-ground-section)]" : "hover:opacity-90"
                   }`}
                   style={planId === p.id ? undefined : { borderColor: "var(--color-border)" }}
@@ -180,7 +211,7 @@ function SignupContent() {
           <div>
             <h1 className="text-2xl font-semibold" style={{ color: "var(--color-ink)" }}>Pick modules</h1>
             <p className="mt-2 text-sm" style={{ color: "var(--color-ink-tertiary)" }}>Included in {plan.name}. Add more below if needed.</p>
-            <div className="mt-6 max-h-80 overflow-y-auto pr-2">
+            <div className="mt-6 max-h-[60vh] overflow-y-auto pr-2 md:max-h-80">
               {CATEGORIES.map((cat) => {
                 const catModules = MODULE_LIST.filter((m) => m.category === cat);
                 if (catModules.length === 0) return null;
@@ -197,7 +228,7 @@ function SignupContent() {
                             type="button"
                             onClick={() => !included && toggleAddOn(m.id)}
                             disabled={included}
-                            className={`w-full rounded-lg border p-3 text-left text-sm transition flex justify-between items-center ${
+                            className={`w-full min-h-[44px] rounded-lg border p-3 text-left text-sm transition flex justify-between items-center ${
                               included ? "cursor-default opacity-90" : isAddOn ? "border-[var(--color-primary)] bg-[var(--color-ground-section)]" : "hover:opacity-90"
                             }`}
                             style={
@@ -315,7 +346,15 @@ function SignupContent() {
                     type="email"
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setEmailValid(validateEmail(e.target.value));
+                    }}
+                    onBlur={() => {
+                      setEmailTouched(true);
+                      setEmailValid(validateEmail(email));
+                    }}
+                    error={emailTouched && email.trim() && !validateEmail(email) ? "Enter a valid email address" : undefined}
                   />
                   <div>
                     <Input
@@ -355,7 +394,12 @@ function SignupContent() {
                     variant="primary"
                     size="md"
                     type="submit"
-                    disabled={submitting || !csrfToken}
+                    disabled={
+                      submitting ||
+                      !csrfToken ||
+                      !validateEmail(email) ||
+                      !PASSWORD_REQUIREMENTS.every((r) => r.test(password))
+                    }
                     className="mt-6 w-full"
                   >
                     {!csrfToken ? "Loading\u2026" : submitting ? "Setting up your workspace\u2026" : "Continue to payment (2Checkout)"}

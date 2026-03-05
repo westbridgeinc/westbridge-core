@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
   AreaChart,
@@ -13,9 +13,13 @@ import {
 } from "recharts";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { MetricCard } from "@/components/dashboard/MetricCard";
+import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
+import { WelcomeModal } from "@/components/dashboard/WelcomeModal";
 import { Button } from "@/components/ui/Button";
 import { SkeletonCard, SkeletonChart } from "@/components/ui/Skeleton";
 import { formatCurrency } from "@/lib/locale/currency";
+
+const WELCOMED_KEY = "wb_welcomed";
 
 /* ---------- types ---------- */
 
@@ -92,6 +96,12 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showWelcome, setShowWelcome] = useState<boolean | null>(null);
+  const checklistRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setShowWelcome(typeof window !== "undefined" ? localStorage.getItem(WELCOMED_KEY) !== "true" : false);
+  }, []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -188,7 +198,16 @@ export default function DashboardPage() {
 
   return (
     <div>
+      <WelcomeModal
+        open={showWelcome === true}
+        onClose={() => setShowWelcome(false)}
+        onGetStarted={() => {
+          setShowWelcome(false);
+          requestAnimationFrame(() => checklistRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+        }}
+      />
       <PageHeader title="Dashboard" description="Welcome back." />
+      <OnboardingChecklist checklistRef={checklistRef} />
 
       {/* Metric cards */}
       <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -307,7 +326,7 @@ export default function DashboardPage() {
           <p className="text-h3 font-semibold" style={{ color: "var(--color-ink)" }}>Quick Actions</p>
           <div className="mt-4 flex flex-col gap-2">
             {QUICK_ACTIONS.map((action) => (
-              <Link key={action.href} href={action.href}>
+              <Link key={action.href} href={action.href} prefetch={true}>
                 <Button variant="secondary" size="md" className="w-full justify-start">
                   {action.label}
                 </Button>

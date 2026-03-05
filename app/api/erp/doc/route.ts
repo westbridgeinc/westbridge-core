@@ -8,13 +8,15 @@ import { erpDocCreateBodySchema } from "@/types/schemas/erp";
 import { validateCsrf, CSRF_COOKIE_NAME } from "@/lib/csrf";
 import { COOKIE } from "@/lib/constants";
 
-async function getErpSession(request: Request): Promise<string | null> {
+async function getErpSession(
+  request: Request
+): Promise<{ sid: string; accountId: string } | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE.SESSION_NAME)?.value;
   if (!token) return null;
   const result = await validateSession(token);
   if (!result.ok || !result.data.erpnextSid) return null;
-  return result.data.erpnextSid;
+  return { sid: result.data.erpnextSid, accountId: result.data.accountId };
 }
 
 async function getSessionForAudit(request: Request): Promise<{ userId: string; accountId: string } | null> {
@@ -33,8 +35,8 @@ export async function GET(request: Request) {
   const requestId = getRequestId(request);
   const meta = () => apiMeta({ request_id: requestId });
 
-  const sid = await getErpSession(request);
-  if (!sid) {
+  const session = await getErpSession(request);
+  if (!session) {
     return NextResponse.json(
       apiError("UNAUTHORIZED", "Unauthorized", undefined, meta()),
       { status: 401 }
@@ -51,7 +53,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const result = await getDoc(doctype, name, sid);
+  const result = await getDoc(doctype, name, session.sid, session.accountId);
   if (!result.ok) {
     const status = result.error === "Not found" ? 404 : 502;
     return NextResponse.json(
@@ -69,8 +71,8 @@ export async function POST(request: Request) {
   const requestId = getRequestId(request);
   const meta = () => apiMeta({ request_id: requestId });
 
-  const sid = await getErpSession(request);
-  if (!sid) {
+  const session = await getErpSession(request);
+  if (!session) {
     return NextResponse.json(
       apiError("UNAUTHORIZED", "Unauthorized", undefined, meta()),
       { status: 401 }
@@ -108,19 +110,19 @@ export async function POST(request: Request) {
   }
 
   const { doctype, ...data } = parsed.data as { doctype: string; [k: string]: unknown };
-  const result = await createDoc(doctype, sid, data as Record<string, unknown>);
+  const result = await createDoc(doctype, session.sid, data as Record<string, unknown>, session.accountId);
   if (!result.ok) {
     return NextResponse.json(
       apiError("ERP_ERROR", result.error, undefined, meta()),
       { status: 502 }
     );
   }
-  const session = await getSessionForAudit(request);
-  if (session) {
+  const auditSession = await getSessionForAudit(request);
+  if (auditSession) {
     const created = result.data as { name?: string };
     void logAction({
-      accountId: session.accountId,
-      userId: session.userId,
+      accountId: auditSession.accountId,
+      userId: auditSession.userId,
       action: "erp.doc.create",
       resource: doctype,
       resourceId: created?.name ?? undefined,

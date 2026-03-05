@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -14,7 +14,9 @@ import {
 import { Calculator } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonCard, SkeletonChart } from "@/components/ui/Skeleton";
+import { MODULE_EMPTY_STATES, EMPTY_STATE_SUPPORT_LINE } from "@/lib/dashboard/empty-state-config";
 import { formatCurrency } from "@/lib/locale/currency";
 
 /* ------------------------------------------------------------------ */
@@ -124,15 +126,38 @@ function ChartTooltip({
 /*  States                                                             */
 /* ------------------------------------------------------------------ */
 
-type PageState = "loading" | "error" | "success";
+type PageState = "loading" | "error" | "empty" | "success";
 
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
 export default function AccountingPage() {
-  const [state, setState] = useState<PageState>("success");
+  const [state, setState] = useState<PageState>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/erp/list?doctype=Account&limit_page_length=1")
+      .then((res) => {
+        if (cancelled) return;
+        if (!res.ok) {
+          setState("empty");
+          return;
+        }
+        return res.json();
+      })
+      .then((json) => {
+        if (cancelled || json === undefined) return;
+        const data = json?.data;
+        const hasAccounts = Array.isArray(data) && data.length > 0;
+        setState(hasAccounts ? "success" : "empty");
+      })
+      .catch(() => {
+        if (!cancelled) setState("empty");
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const retry = useCallback(() => {
     setErrorMessage(null);
@@ -140,6 +165,28 @@ export default function AccountingPage() {
     // Simulate reload
     setTimeout(() => setState("success"), 800);
   }, []);
+
+  /* ---------- Empty state (no chart of accounts) ---------- */
+  if (state === "empty") {
+    return (
+      <div>
+        <PageHeader title="Accounting" description="General ledger and financial overview" />
+        <div
+          className="mt-6 rounded-[var(--radius-md)] border"
+          style={{ borderColor: "var(--color-border)" }}
+        >
+          <EmptyState
+            icon={<Calculator className="h-6 w-6" />}
+            title={MODULE_EMPTY_STATES.accounting.title}
+            description={MODULE_EMPTY_STATES.accounting.description}
+            actionLabel={MODULE_EMPTY_STATES.accounting.actionLabel}
+            actionHref={MODULE_EMPTY_STATES.accounting.actionLink}
+            supportLine={EMPTY_STATE_SUPPORT_LINE}
+          />
+        </div>
+      </div>
+    );
+  }
 
   /* ---------- Loading state ---------- */
   if (state === "loading") {

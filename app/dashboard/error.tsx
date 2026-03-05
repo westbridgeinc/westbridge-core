@@ -36,7 +36,7 @@ export default function DashboardError({
         >
           Try again
         </button>
-        <Link href={ROUTES.dashboard} className="btn-secondary">
+        <Link href={ROUTES.dashboard} prefetch={true} className="btn-secondary">
           Dashboard
         </Link>
       </div>

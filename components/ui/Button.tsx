@@ -13,7 +13,7 @@ const SIZE_CLASS: Record<ButtonSize, string> = {
 
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
   primary:
-    "bg-[var(--color-primary)] text-white border-transparent hover:bg-[var(--color-primary-hover)] shadow-[var(--shadow-button)]",
+    "bg-[var(--color-primary)] text-white border-transparent hover:bg-[var(--color-primary-hover)] shadow-[var(--shadow-button)] active:scale-[0.97]",
   secondary:
     "bg-transparent text-[var(--color-ink-secondary)] border border-[var(--color-border)] hover:text-[var(--color-ink)] hover:border-[var(--color-ink-muted)] hover:bg-[var(--color-ground-section)]",
   danger:
@@ -58,7 +58,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           isDisabled && "cursor-not-allowed opacity-50",
           className,
         ].filter(Boolean).join(" ")}
-        style={{ minWidth: loading ? undefined : "auto" }}
+        style={{ transitionProperty: "min-width, opacity, transform" }}
         {...props}
       >
         {loading ? (

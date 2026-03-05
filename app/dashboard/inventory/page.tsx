@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { Package } from "lucide-react";
+import { MODULE_EMPTY_STATES, EMPTY_STATE_SUPPORT_LINE } from "@/lib/dashboard/empty-state-config";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { DataTable, type Column } from "@/components/ui/DataTable";
@@ -239,10 +240,11 @@ export default function InventoryPage() {
         emptyState={
           <EmptyState
             icon={<Package className="h-6 w-6" />}
-            title="No inventory items"
-            description="Your inventory is empty. Add items to start tracking stock levels and values."
-            actionLabel="Add Item"
-            onAction={() => {}}
+            title={MODULE_EMPTY_STATES.inventory.title}
+            description={MODULE_EMPTY_STATES.inventory.description}
+            actionLabel={MODULE_EMPTY_STATES.inventory.actionLabel}
+            actionHref={MODULE_EMPTY_STATES.inventory.actionLink}
+            supportLine={EMPTY_STATE_SUPPORT_LINE}
           />
         }
         pageSize={20}

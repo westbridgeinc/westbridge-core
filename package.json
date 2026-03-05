@@ -9,12 +9,14 @@
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint",
     "semgrep": ".venv/bin/semgrep scan --config auto .",
     "setup": "bash scripts/setup.sh",
     "db:push": "prisma db push"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.42.0",
     "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
     "framer-motion": "^12.34.4",
@@ -39,6 +41,7 @@
     "prisma": "^7.4.2",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "@vitest/coverage-v8": "^4.0.18"
   }
 }

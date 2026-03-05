@@ -5,8 +5,11 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { DataTable, type Column } from "@/components/ui/DataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonTable } from "@/components/ui/SkeletonTable";
+import { MODULE_EMPTY_STATES, EMPTY_STATE_SUPPORT_LINE } from "@/lib/dashboard/empty-state-config";
 import { formatCurrency } from "@/lib/locale/currency";
+import { Truck } from "lucide-react";
 import { formatDateLong } from "@/lib/locale/date";
 
 interface PurchaseOrder {
@@ -88,9 +91,16 @@ export default function ProcurementPage() {
             columns={columns}
             data={data}
             keyExtractor={(r) => r.id}
-            emptyTitle="No purchase orders"
-            emptyDescription="Create your first purchase order to get started."
-            emptyActionLabel="Create PO"
+            emptyState={
+              <EmptyState
+                icon={<Truck className="h-6 w-6" />}
+                title={MODULE_EMPTY_STATES.procurement.title}
+                description={MODULE_EMPTY_STATES.procurement.description}
+                actionLabel={MODULE_EMPTY_STATES.procurement.actionLabel}
+                actionHref={MODULE_EMPTY_STATES.procurement.actionLink}
+                supportLine={EMPTY_STATE_SUPPORT_LINE}
+              />
+            }
             pageSize={20}
           />
         )}

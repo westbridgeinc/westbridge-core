@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Briefcase } from "lucide-react";
+import { Users, Briefcase } from "lucide-react";
+import { MODULE_EMPTY_STATES, EMPTY_STATE_SUPPORT_LINE } from "@/lib/dashboard/empty-state-config";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -218,11 +219,12 @@ export default function CRMPage() {
           }}
         >
           <EmptyState
-            icon={<Briefcase className="h-6 w-6" />}
-            title="No opportunities yet"
-            description="Create your first opportunity to start tracking your sales pipeline."
-            actionLabel="Add Opportunity"
-            actionHref="/dashboard/crm/new"
+            icon={<Users className="h-6 w-6" />}
+            title={MODULE_EMPTY_STATES.crm.title}
+            description={MODULE_EMPTY_STATES.crm.description}
+            actionLabel={MODULE_EMPTY_STATES.crm.actionLabel}
+            actionHref={MODULE_EMPTY_STATES.crm.actionLink}
+            supportLine={EMPTY_STATE_SUPPORT_LINE}
           />
         </div>
       ) : (

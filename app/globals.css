@@ -76,9 +76,33 @@
   --color-border-subtle: #262626;
   --color-accent: #14b8a6;
   --color-accent-hover: #2dd4bf;
+  --shimmer-mid: rgba(255, 255, 255, 0.04);
 }
 .dashboard-theme :focus-visible {
   box-shadow: 0 0 0 2px var(--color-ground), 0 0 0 4px var(--color-accent);
+}
+:root {
+  --shimmer-mid: rgba(0, 0, 0, 0.04);
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.skeleton-shimmer-overlay {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
+}
+.skeleton-shimmer-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 50%;
+  background: linear-gradient(90deg, transparent, var(--shimmer-mid), transparent);
+  animation: shimmer 1.5s ease-in-out infinite;
 }
 .dashboard-theme .input {
   background: var(--color-input-bg);
@@ -87,9 +111,6 @@
 .dashboard-theme .input:focus {
   border-color: var(--color-accent);
   box-shadow: 0 0 0 3px rgb(20 184 166 / 0.15);
-}
-.dashboard-theme .card:hover {
-  box-shadow: none;
 }
 :root {
   --color-input-bg: var(--color-ground-elevated);
@@ -261,6 +282,11 @@ body {
 .card:hover {
   box-shadow: var(--shadow-card-hover);
   border-color: var(--color-border);
+  transform: translateY(-2px);
+}
+.dashboard-theme .card:hover {
+  box-shadow: none;
+  transform: none;
 }
 
 /* Input base */

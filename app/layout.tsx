@@ -21,6 +21,7 @@ export const metadata: Metadata = {
   description: SITE.tagline,
   openGraph: { type: "website", siteName: SITE.name },
   icons: { icon: SITE.faviconPath, apple: SITE.faviconPath },
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({

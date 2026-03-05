@@ -9,9 +9,11 @@ export interface EmptyStateProps {
   actionLabel?: string;
   onAction?: () => void;
   actionHref?: string;
+  /** Muted text below the action, e.g. "Need help? Contact support@..." */
+  supportLine?: string;
 }
 
-export function EmptyState({ icon, title, description, actionLabel, onAction, actionHref }: EmptyStateProps) {
+export function EmptyState({ icon, title, description, actionLabel, onAction, actionHref, supportLine }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       {icon && (
@@ -40,6 +42,11 @@ export function EmptyState({ icon, title, description, actionLabel, onAction, ac
             <Button variant="primary" size="md" onClick={onAction}>{actionLabel}</Button>
           )}
         </div>
+      )}
+      {supportLine && (
+        <p className="mt-4 text-caption" style={{ color: "var(--color-ink-tertiary)" }}>
+          {supportLine}
+        </p>
       )}
     </div>
   );

@@ -24,7 +24,7 @@ export function DashboardBreadcrumbs() {
   if (segments.length === 0) return null;
   return (
     <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-2 text-caption" style={{ color: "var(--color-ink-tertiary)" }}>
-      <Link href={ROUTES.dashboard} className="transition-colors hover:opacity-100" style={{ color: "var(--color-ink-muted)" }}>
+      <Link href={ROUTES.dashboard} prefetch={true} className="transition-colors hover:opacity-100" style={{ color: "var(--color-ink-muted)" }}>
         Dashboard
       </Link>
       {segments.map((segment, i) => {
@@ -37,7 +37,7 @@ export function DashboardBreadcrumbs() {
             {isLast ? (
               <span style={{ color: "var(--color-ink-secondary)" }}>{label}</span>
             ) : (
-              <Link href={href} className="transition-colors hover:opacity-100" style={{ color: "var(--color-ink-muted)" }}>
+              <Link href={href} prefetch={true} className="transition-colors hover:opacity-100" style={{ color: "var(--color-ink-muted)" }}>
                 {label}
               </Link>
             )}

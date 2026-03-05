@@ -50,13 +50,15 @@ export async function createSession(
   }
 }
 
+export type SessionRole = "owner" | "admin" | "member";
+
 /**
- * Validate session token. Returns userId and accountId; optionally erpnextSid for ERP proxy.
+ * Validate session token. Returns userId, accountId, role; optionally erpnextSid for ERP proxy.
  * Deletes expired sessions on miss.
  */
 export async function validateSession(
   token: string
-): Promise<Result<{ userId: string; accountId: string; erpnextSid?: string | null }, string>> {
+): Promise<Result<{ userId: string; accountId: string; role: SessionRole; erpnextSid?: string | null }, string>> {
   if (!token?.trim()) return err("Missing token");
   const tokenHash = hashToken(token);
 
@@ -73,9 +75,13 @@ export async function validateSession(
       await prisma.session.delete({ where: { id: session.id } }).catch(() => {});
       return err("Session expired");
     }
+    const role = (session.user.role === "owner" || session.user.role === "admin" || session.user.role === "member")
+      ? session.user.role
+      : "member";
     return ok({
       userId: session.userId,
       accountId: session.user.accountId,
+      role,
       erpnextSid: session.erpnextSid ?? undefined,
     });
   } catch (e) {

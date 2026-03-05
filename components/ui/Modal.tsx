@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useCallback, type ReactNode } from "react";
+import { useEffect, useCallback, useRef, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+
+const FOCUSABLE =
+  "button, [href], input, select, textarea, [tabindex]:not([tabindex=\"-1\"])";
 
 export interface ModalProps {
   open: boolean;
@@ -13,6 +16,9 @@ export interface ModalProps {
 }
 
 export function Modal({ open, onClose, title, children, className = "" }: ModalProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const previousActiveRef = useRef<HTMLElement | null>(null);
+
   const handleEscape = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -22,14 +28,47 @@ export function Modal({ open, onClose, title, children, className = "" }: ModalP
 
   useEffect(() => {
     if (open) {
+      previousActiveRef.current = document.activeElement as HTMLElement | null;
       document.addEventListener("keydown", handleEscape);
       document.body.style.overflow = "hidden";
     }
     return () => {
       document.removeEventListener("keydown", handleEscape);
       document.body.style.overflow = "";
+      if (previousActiveRef.current && typeof previousActiveRef.current.focus === "function") {
+        previousActiveRef.current.focus();
+      }
     };
   }, [open, handleEscape]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key !== "Tab" || !panelRef.current) return;
+      const focusable = Array.from<HTMLElement>(panelRef.current.querySelectorAll(FOCUSABLE));
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (open && panelRef.current) {
+      const focusable = panelRef.current.querySelector<HTMLElement>(FOCUSABLE);
+      if (focusable) focusable.focus();
+    }
+  }, [open]);
 
   return (
     <AnimatePresence>
@@ -46,6 +85,7 @@ export function Modal({ open, onClose, title, children, className = "" }: ModalP
           />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
+              ref={panelRef}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -59,6 +99,7 @@ export function Modal({ open, onClose, title, children, className = "" }: ModalP
                 borderColor: "var(--color-border)",
               }}
               onClick={(e) => e.stopPropagation()}
+              onKeyDown={handleKeyDown}
             >
               {title && (
                 <div

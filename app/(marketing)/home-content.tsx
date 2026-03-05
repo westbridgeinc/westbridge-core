@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { MODULES } from "@/lib/modules";
 import { ROUTES, TRIAL } from "@/lib/config/site";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 
 const HOMEPAGE_MODULE_IDS = [
   "general-ledger",
@@ -116,7 +117,7 @@ export function HomeContent() {
             ].map((stat) => (
               <motion.div key={stat.label} variants={item} className="text-center">
                 <p className="text-h1 font-bold" style={{ color: "var(--color-ink)" }}>
-                  {stat.value}
+                  <AnimatedNumber value={stat.value} />
                 </p>
                 <p className="mt-1 text-body" style={{ color: "var(--color-ink-secondary)" }}>
                   {stat.label}

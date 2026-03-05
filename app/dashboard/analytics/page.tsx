@@ -1,8 +1,12 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip, BarChart, Bar, CartesianGrid } from "recharts";
+import { BarChart3 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { MetricCard } from "@/components/dashboard/MetricCard";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { MODULE_EMPTY_STATES, EMPTY_STATE_SUPPORT_LINE } from "@/lib/dashboard/empty-state-config";
 
 const revData = [
   { month: "Mar", value: 2.1 }, { month: "Apr", value: 2.4 }, { month: "May", value: 2.6 },
@@ -25,6 +29,53 @@ const byCategory = [
 ];
 
 export default function AnalyticsPage() {
+  const [hasData, setHasData] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/erp/dashboard")
+      .then((res) => {
+        if (cancelled) return;
+        if (!res.ok) {
+          setHasData(false);
+          return;
+        }
+        return res.json();
+      })
+      .then((json) => {
+        if (cancelled || json === undefined) return;
+        const d = json?.data;
+        const revenue = Number(d?.revenueMTD ?? 0);
+        const activity = Array.isArray(d?.activity) ? d.activity : [];
+        setHasData(revenue > 0 || activity.length > 0);
+      })
+      .catch(() => {
+        if (!cancelled) setHasData(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  if (hasData === false) {
+    return (
+      <div>
+        <PageHeader title="Analytics" description="Reports and business intelligence" />
+        <div
+          className="mt-6 rounded-[var(--radius-md)] border"
+          style={{ borderColor: "var(--color-border)" }}
+        >
+          <EmptyState
+            icon={<BarChart3 className="h-6 w-6" />}
+            title={MODULE_EMPTY_STATES.analytics.title}
+            description={MODULE_EMPTY_STATES.analytics.description}
+            actionLabel={MODULE_EMPTY_STATES.analytics.actionLabel}
+            actionHref={MODULE_EMPTY_STATES.analytics.actionLink}
+            supportLine={EMPTY_STATE_SUPPORT_LINE}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageHeader title="Analytics" description="Reports and business intelligence" />
@@ -104,3 +155,4 @@ export default function AnalyticsPage() {
     </div>
   );
 }
+

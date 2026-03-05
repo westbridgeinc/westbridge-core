@@ -1,50 +1,74 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Search, Bell, FileText, UserPlus } from "lucide-react";
+import { Search, Bell, FileText, UserPlus, Menu } from "lucide-react";
 import { DashboardBreadcrumbs } from "./DashboardBreadcrumbs";
 import { CommandPalette } from "./CommandPalette";
+import { NotificationPanel, useNotifications } from "./NotificationPanel";
+import { ShortcutsModal } from "./ShortcutsModal";
+import { useShortcuts } from "./ShortcutsContext";
+import { useSidebar } from "./SidebarContext";
+import { useKeyboardShortcuts } from "@/lib/hooks/useKeyboardShortcuts";
 
 export function DashboardTopbar() {
   const [openCommand, setOpenCommand] = useState(false);
+  const [openNotifications, setOpenNotifications] = useState(false);
+  const { setMobileOpen } = useSidebar();
+  const { openShortcuts, setOpenShortcuts, openShortcutsModal } = useShortcuts();
+  const {
+    notifications,
+    loading,
+    unreadCount,
+    fetchNotifications,
+    markAllRead,
+    markRead,
+  } = useNotifications();
 
-  const onKeyDown = useCallback((e: KeyboardEvent) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-      e.preventDefault();
-      setOpenCommand((v) => !v);
-    }
-  }, []);
+  useKeyboardShortcuts({
+    onOpenCommand: () => setOpenCommand(true),
+    onOpenNotifications: () => setOpenNotifications((v) => !v),
+    onOpenShortcuts: openShortcutsModal,
+  });
 
   useEffect(() => {
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onKeyDown]);
+    if (openNotifications) fetchNotifications();
+  }, [openNotifications, fetchNotifications]);
 
   return (
     <>
       <header
-        className="sticky top-0 z-[9] flex items-center justify-between gap-4 border-b py-4"
+        className="sticky top-0 z-[9] flex items-center justify-between gap-2 border-b py-4 md:gap-4"
         style={{ borderColor: "var(--color-border)", background: "var(--color-ground)" }}
       >
-        <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition-colors hover:bg-[var(--color-ground-section)] md:hidden"
+            style={{ borderColor: "var(--color-border)" }}
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" style={{ color: "var(--color-ink-secondary)" }} />
+          </button>
           <DashboardBreadcrumbs />
         </div>
         <button
           type="button"
           onClick={() => setOpenCommand(true)}
-          className="flex max-w-md flex-1 items-center gap-2 rounded-lg border px-4 py-2.5 text-left text-body transition-colors hover:bg-[var(--color-ground-section)]"
+          className="flex max-w-md flex-1 items-center gap-2 rounded-lg border px-3 py-2.5 text-left text-body transition-colors hover:bg-[var(--color-ground-section)] md:px-4"
           style={{ borderColor: "var(--color-border)", color: "var(--color-ink-tertiary)" }}
         >
           <Search className="h-4 w-4 shrink-0 opacity-70" />
-          <span>Search modules, records…</span>
+          <span className="hidden sm:inline">Search modules, records…</span>
           <kbd className="ml-auto hidden rounded border px-1.5 py-0.5 text-[10px] font-medium sm:inline-block" style={{ borderColor: "var(--color-border)" }}>
             ⌘K
           </kbd>
         </button>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <Link
             href="/dashboard/invoices"
+            prefetch={true}
             className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors hover:bg-[var(--color-ground-section)]"
             style={{ borderColor: "var(--color-border)", color: "var(--color-ink)" }}
           >
@@ -53,6 +77,7 @@ export function DashboardTopbar() {
           </Link>
           <Link
             href="/dashboard/crm"
+            prefetch={true}
             className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors hover:bg-[var(--color-ground-section)]"
             style={{ borderColor: "var(--color-border)", color: "var(--color-ink)" }}
           >
@@ -61,15 +86,34 @@ export function DashboardTopbar() {
           </Link>
           <button
             type="button"
-            className="rounded-lg border p-2 transition-colors hover:bg-[var(--color-ground-section)]"
+            onClick={() => setOpenNotifications(true)}
+            className="relative rounded-lg border p-2 transition-colors hover:bg-[var(--color-ground-section)]"
             style={{ borderColor: "var(--color-border)" }}
             aria-label="Notifications"
           >
             <Bell className="h-5 w-5" style={{ color: "var(--color-ink-secondary)" }} />
+            {unreadCount > 0 && (
+              <span
+                className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white"
+                style={{ background: "var(--color-error)" }}
+              >
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
           </button>
         </div>
       </header>
       <CommandPalette open={openCommand} onClose={() => setOpenCommand(false)} />
+      <ShortcutsModal open={openShortcuts} onClose={() => setOpenShortcuts(false)} />
+      <NotificationPanel
+        open={openNotifications}
+        onClose={() => setOpenNotifications(false)}
+        notifications={notifications}
+        unreadCount={unreadCount}
+        onMarkAllRead={markAllRead}
+        onMarkRead={markRead}
+        loading={loading}
+      />
     </>
   );
 }

@@ -7,20 +7,25 @@ import { Result, ok, err } from "@/lib/utils/result";
 
 const ERPNEXT_URL = process.env.ERPNEXT_URL || "http://localhost:8080";
 
+const ACCOUNT_HEADER = "X-Westbridge-Account-Id";
+
 async function fetchErp(
   endpoint: string,
   sessionId: string | undefined,
-  options?: RequestInit
+  options?: RequestInit,
+  accountId?: string
 ): Promise<Result<unknown, string>> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    ...(options?.headers as Record<string, string>),
   };
   if (sessionId) headers["Cookie"] = `sid=${sessionId}`;
+  if (accountId) headers[ACCOUNT_HEADER] = accountId;
 
   try {
     const res = await fetch(`${ERPNEXT_URL}/api${endpoint}`, {
       ...options,
-      headers: { ...headers, ...(options?.headers as Record<string, string>) },
+      headers,
       cache: "no-store",
     });
     if (!res.ok) return err(`ERPNext ${res.status}: ${res.statusText}`);
@@ -48,15 +53,14 @@ export async function erpList(
   doctype: string,
   sessionId: string,
   params?: ListParams,
-  accountId?: string // reserved for multi-tenant row-level security
+  accountId?: string
 ): Promise<Result<unknown[], string>> {
-  void accountId; // used when row-level security is applied
   const query = new URLSearchParams({
     limit_page_length: "20",
     order_by: "creation desc",
     ...params,
   }).toString();
-  const result = await fetchErp(`/resource/${doctype}?${query}`, sessionId);
+  const result = await fetchErp(`/resource/${doctype}?${query}`, sessionId, undefined, accountId);
   if (!result.ok) return err(result.error);
   const body = result.data as { data?: unknown[] };
   return ok(Array.isArray(body?.data) ? body.data : []);
@@ -65,9 +69,15 @@ export async function erpList(
 export async function erpGet(
   doctype: string,
   name: string,
-  sessionId: string
+  sessionId: string,
+  accountId?: string
 ): Promise<Result<unknown, string>> {
-  const result = await fetchErp(`/resource/${doctype}/${encodeURIComponent(name)}`, sessionId);
+  const result = await fetchErp(
+    `/resource/${doctype}/${encodeURIComponent(name)}`,
+    sessionId,
+    undefined,
+    accountId
+  );
   if (!result.ok) return err(result.error);
   const body = result.data as { data?: unknown };
   return body?.data != null ? ok(body.data) : err("Not found");
@@ -76,22 +86,28 @@ export async function erpGet(
 export async function erpCreate(
   doctype: string,
   sessionId: string,
-  body: Record<string, unknown>
+  body: Record<string, unknown>,
+  accountId?: string
 ): Promise<Result<unknown, string>> {
-  return fetchErp(`/resource/${doctype}`, sessionId, {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
+  return fetchErp(
+    `/resource/${doctype}`,
+    sessionId,
+    { method: "POST", body: JSON.stringify(body) },
+    accountId
+  );
 }
 
 export async function erpUpdate(
   doctype: string,
   name: string,
   sessionId: string,
-  updates: Record<string, unknown>
+  updates: Record<string, unknown>,
+  accountId?: string
 ): Promise<Result<unknown, string>> {
-  return fetchErp(`/resource/${doctype}/${encodeURIComponent(name)}`, sessionId, {
-    method: "PUT",
-    body: JSON.stringify(updates),
-  });
+  return fetchErp(
+    `/resource/${doctype}/${encodeURIComponent(name)}`,
+    sessionId,
+    { method: "PUT", body: JSON.stringify(updates) },
+    accountId
+  );
 }

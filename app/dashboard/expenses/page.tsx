@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonCard } from "@/components/ui/Skeleton";
 import { formatCurrency } from "@/lib/locale/currency";
 import { formatDate } from "@/lib/locale/date";
+import { MODULE_EMPTY_STATES, EMPTY_STATE_SUPPORT_LINE } from "@/lib/dashboard/empty-state-config";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -251,8 +252,8 @@ export default function ExpensesPage() {
           data={rows}
           keyExtractor={(row) => row.name}
           loading={loading}
-          emptyTitle="No expense claims"
-          emptyDescription="Submit your first expense claim to get started."
+          emptyTitle={MODULE_EMPTY_STATES.expenses.title}
+          emptyDescription={MODULE_EMPTY_STATES.expenses.description}
           emptyState={
             <div
               className="rounded-xl border"
@@ -263,8 +264,11 @@ export default function ExpensesPage() {
             >
               <EmptyState
                 icon={<Receipt className="h-6 w-6" />}
-                title="No expense claims"
-                description="Submit your first expense claim to get started."
+                title={MODULE_EMPTY_STATES.expenses.title}
+                description={MODULE_EMPTY_STATES.expenses.description}
+                actionLabel={MODULE_EMPTY_STATES.expenses.actionLabel}
+                actionHref={MODULE_EMPTY_STATES.expenses.actionLink}
+                supportLine={EMPTY_STATE_SUPPORT_LINE}
               />
             </div>
           }

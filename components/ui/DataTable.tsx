@@ -31,6 +31,8 @@ export interface DataTableProps<T> {
   onRowClick?: (row: T) => void;
   pageSize?: number;
   className?: string;
+  /** On viewports < 768px, rows render as cards. If provided, used for each row; otherwise first 3 columns are shown stacked. */
+  mobileCardRenderer?: (row: T) => ReactNode;
 }
 
 type SortDir = "asc" | "desc" | null;
@@ -51,6 +53,7 @@ export function DataTable<T>({
   onRowClick,
   pageSize = 20,
   className = "",
+  mobileCardRenderer,
 }: DataTableProps<T>) {
   const [sortCol, setSortCol] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>(null);
@@ -154,10 +157,29 @@ export function DataTable<T>({
     );
   }
 
+  const defaultMobileCard = (row: T) => {
+    const cols = columns.slice(0, 3);
+    return (
+      <div className="space-y-2 py-3">
+        {cols.map((col) => (
+          <div key={col.id} className="flex flex-col gap-0.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-ink-tertiary)" }}>
+              {col.header}
+            </span>
+            <span className="text-[0.9375rem]" style={{ color: "var(--color-ink)" }}>
+              {col.accessor(row)}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className={className}>
+      {/* Desktop: table */}
       <div
-        className="overflow-hidden rounded-[var(--radius-md)] border"
+        className="hidden overflow-hidden rounded-[var(--radius-md)] border md:block"
         style={{ borderColor: "var(--color-border)" }}
       >
         <table className="w-full text-[0.9375rem]">
@@ -269,6 +291,40 @@ export function DataTable<T>({
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile: card list */}
+      <div className="md:hidden space-y-3">
+        {paginated.map((row) => {
+          const key = keyExtractor(row);
+          const cardContent = mobileCardRenderer ? mobileCardRenderer(row) : defaultMobileCard(row);
+          return (
+            <div
+              key={key}
+              role={onRowClick ? "button" : undefined}
+              tabIndex={onRowClick ? 0 : undefined}
+              onClick={onRowClick ? () => onRowClick(row) : undefined}
+              onKeyDown={
+                onRowClick
+                  ? (e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onRowClick(row);
+                      }
+                    }
+                  : undefined
+              }
+              className="rounded-[var(--radius-md)] border p-4 text-left transition-colors"
+              style={{
+                borderColor: "var(--color-border)",
+                background: "var(--color-ground)",
+                cursor: onRowClick ? "pointer" : undefined,
+              }}
+            >
+              {cardContent}
+            </div>
+          );
+        })}
       </div>
 
       {data.length > pageSize && (

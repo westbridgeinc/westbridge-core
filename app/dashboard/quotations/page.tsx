@@ -5,8 +5,11 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { DataTable, type Column } from "@/components/ui/DataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonTable } from "@/components/ui/SkeletonTable";
+import { MODULE_EMPTY_STATES, EMPTY_STATE_SUPPORT_LINE } from "@/lib/dashboard/empty-state-config";
 import { formatCurrency } from "@/lib/locale/currency";
+import { FileBarChart } from "lucide-react";
 import { formatDateLong } from "@/lib/locale/date";
 
 interface QuotationRow {
@@ -74,9 +77,16 @@ export default function QuotationsPage() {
             columns={columns}
             data={data}
             keyExtractor={(r) => r.id}
-            emptyTitle="No quotations"
-            emptyDescription="Create your first quotation to get started."
-            emptyActionLabel="New Quote"
+            emptyState={
+              <EmptyState
+                icon={<FileBarChart className="h-6 w-6" />}
+                title={MODULE_EMPTY_STATES.quotations.title}
+                description={MODULE_EMPTY_STATES.quotations.description}
+                actionLabel={MODULE_EMPTY_STATES.quotations.actionLabel}
+                actionHref={MODULE_EMPTY_STATES.quotations.actionLink}
+                supportLine={EMPTY_STATE_SUPPORT_LINE}
+              />
+            }
             pageSize={20}
           />
         )}

@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { formatCurrency } from "@/lib/locale/currency";
 import { formatDate } from "@/lib/locale/date";
 import type { CurrencyCode } from "@/lib/constants";
+import { MODULE_EMPTY_STATES, EMPTY_STATE_SUPPORT_LINE } from "@/lib/dashboard/empty-state-config";
 import { FileText } from "lucide-react";
 
 /* ---------- types ---------- */
@@ -224,10 +225,11 @@ export default function InvoicesPage() {
         >
           <EmptyState
             icon={<FileText className="h-6 w-6" />}
-            title="No invoices yet"
-            description="Create your first invoice to start tracking payments and revenue."
-            actionLabel="Create Invoice"
-            onAction={handleCreateInvoice}
+            title={MODULE_EMPTY_STATES.invoices.title}
+            description={MODULE_EMPTY_STATES.invoices.description}
+            actionLabel={MODULE_EMPTY_STATES.invoices.actionLabel}
+            actionHref={MODULE_EMPTY_STATES.invoices.actionLink}
+            supportLine={EMPTY_STATE_SUPPORT_LINE}
           />
         </div>
       </div>

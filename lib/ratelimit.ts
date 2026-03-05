@@ -1,5 +1,5 @@
 /**
- * Rate limiter using Redis (INCR + EXPIRE). Falls back to allowing the request and logging a warning if Redis is unavailable.
+ * Rate limiter using Redis (INCR + EXPIRE). Fails closed: when Redis is unavailable or errors, requests are denied.
  */
 
 import { getRedis } from "@/lib/redis";
@@ -20,8 +20,8 @@ export async function checkRateLimit(
   const client = getRedis();
   if (!client) {
     const { logger } = await import("@/lib/logger");
-    logger.warn("Rate limit: Redis unavailable, allowing request");
-    return { allowed: true, remaining: maxRequests };
+    logger.warn("Rate limit: Redis unavailable, denying request (fail closed)");
+    return { allowed: false, remaining: 0 };
   }
 
   const redisKey = `ratelimit:${key}`;
@@ -33,7 +33,7 @@ export async function checkRateLimit(
     return { allowed, remaining };
   } catch (e) {
     const { logger } = await import("@/lib/logger");
-    logger.warn("Rate limit: Redis error, allowing request", { error: e instanceof Error ? e.message : String(e) });
-    return { allowed: true, remaining: maxRequests };
+    logger.warn("Rate limit: Redis error, denying request (fail closed)", { error: e instanceof Error ? e.message : String(e) });
+    return { allowed: false, remaining: 0 };
   }
 }

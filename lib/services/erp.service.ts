@@ -28,27 +28,30 @@ export async function list(
 export async function getDoc(
   doctype: string,
   name: string,
-  sessionId: string
+  sessionId: string,
+  accountId?: string
 ): Promise<Result<unknown, string>> {
   if (!doctype?.trim() || !name?.trim()) return { ok: false, error: "doctype and name required" };
-  return erpGet(doctype, name, sessionId);
+  return erpGet(doctype, name, sessionId, accountId);
 }
 
 export async function createDoc(
   doctype: string,
   sessionId: string,
-  body: Record<string, unknown>
+  body: Record<string, unknown>,
+  accountId?: string
 ): Promise<Result<unknown, string>> {
   if (!doctype?.trim()) return { ok: false, error: "doctype required" };
-  return erpCreate(doctype, sessionId, body);
+  return erpCreate(doctype, sessionId, body, accountId);
 }
 
 export async function updateDoc(
   doctype: string,
   name: string,
   sessionId: string,
-  updates: Record<string, unknown>
+  updates: Record<string, unknown>,
+  accountId?: string
 ): Promise<Result<unknown, string>> {
   if (!doctype?.trim() || !name?.trim()) return { ok: false, error: "doctype and name required" };
-  return erpUpdate(doctype, name, sessionId, updates);
+  return erpUpdate(doctype, name, sessionId, updates, accountId);
 }

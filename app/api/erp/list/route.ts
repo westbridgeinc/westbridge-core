@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { validateSession } from "@/lib/services/session.service";
 import { list } from "@/lib/services/erp.service";
+import { parseAndValidateFilters } from "@/lib/validation/erp-filters";
 import { apiSuccess, apiError, apiMeta, getRequestId } from "@/types/api";
 import { COOKIE } from "@/lib/constants";
 
@@ -50,13 +51,23 @@ export async function GET(request: Request) {
   const offset = searchParams.get("offset") ?? "0";
   const orderBy = searchParams.get("order_by") ?? "creation desc";
   const fields = searchParams.get("fields");
+  const filtersParam = searchParams.get("filters");
 
-  const params = {
+  const filtersResult = parseAndValidateFilters(filtersParam);
+  if (!filtersResult.ok) {
+    return NextResponse.json(
+      apiError("BAD_REQUEST", filtersResult.error, undefined, meta()),
+      { status: 400 }
+    );
+  }
+
+  const params: Record<string, string> = {
     limit_page_length: limit,
     limit_start: offset,
     order_by: orderBy,
-    ...(fields ? { fields: JSON.stringify(fields.split(",").map((f) => f.trim())) } : {}),
   };
+  if (fields) params.fields = JSON.stringify(fields.split(",").map((f) => f.trim()));
+  if (filtersResult.filters !== "[]") params.filters = filtersResult.filters;
 
   const result = await list(doctype, sid, params, accountId ?? undefined);
   if (!result.ok) {

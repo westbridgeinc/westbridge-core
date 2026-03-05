@@ -6,6 +6,21 @@ export default defineConfig({
     environment: "node",
     globals: true,
     include: ["**/*.test.ts", "**/*.spec.ts"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "text-summary", "html", "lcov"],
+      include: ["lib/**/*.ts", "types/**/*.ts"],
+      exclude: [
+        "lib/generated/**",
+        "**/*.test.ts",
+        "**/*.spec.ts",
+        "**/types/**/*.d.ts",
+      ],
+      lines: 78,
+      functions: 78,
+      statements: 78,
+      branches: 58,
+    },
   },
   resolve: {
     alias: {

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Banknote } from "lucide-react";
+import { DollarSign } from "lucide-react";
+import { MODULE_EMPTY_STATES, EMPTY_STATE_SUPPORT_LINE } from "@/lib/dashboard/empty-state-config";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { DataTable, type Column } from "@/components/ui/DataTable";
@@ -215,11 +216,12 @@ export default function PayrollPage() {
         loading={false}
         emptyState={
           <EmptyState
-            icon={<Banknote className="h-6 w-6" />}
-            title="No payroll records"
-            description="There are no payroll runs for the current period. Process a payroll run to see records here."
-            actionLabel="Run Payroll"
-            onAction={() => {}}
+            icon={<DollarSign className="h-6 w-6" />}
+            title={MODULE_EMPTY_STATES.payroll.title}
+            description={MODULE_EMPTY_STATES.payroll.description}
+            actionLabel={MODULE_EMPTY_STATES.payroll.actionLabel}
+            actionHref={MODULE_EMPTY_STATES.payroll.actionLink}
+            supportLine={EMPTY_STATE_SUPPORT_LINE}
           />
         }
         pageSize={20}
