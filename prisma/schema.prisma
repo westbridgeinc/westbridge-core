@@ -173,7 +173,7 @@ model WebhookEndpoint {
   accountId           String    @map("account_id")
   url                 String
   events              String[]  // event types this endpoint subscribes to
-  secret              String    // HMAC signing secret (encrypted at rest in application layer)
+  secret              String    // HMAC signing secret; stored encrypted at rest (see lib/encryption)
   enabled             Boolean   @default(true)
   consecutiveFailures Int       @default(0) @map("consecutive_failures")
   disabledAt          DateTime? @map("disabled_at") // set when circuit breaker trips; survives restarts

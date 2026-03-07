@@ -27,20 +27,15 @@ describe("audit.service", () => {
       userAgent: "Mozilla/5.0",
     });
     expect(createMock).toHaveBeenCalledTimes(1);
-    expect(createMock).toHaveBeenCalledWith({
-      data: {
-        accountId: "acc-1",
-        userId: "user-1",
-        action: "auth.login.success",
-        resource: undefined,
-        resourceId: undefined,
-        metadata: undefined,
-        ipAddress: "127.0.0.1",
-        userAgent: "Mozilla/5.0",
-        severity: "info",
-        outcome: "success",
-      },
-    });
+    const call = createMock.mock.calls[0]![0];
+    expect(call.data.accountId).toBe("acc-1");
+    expect(call.data.userId).toBe("user-1");
+    expect(call.data.action).toBe("auth.login.success");
+    expect(call.data.ipAddress).toBe("127.0.0.0");
+    expect(call.data.userAgent).toMatch(/^[a-f0-9]{16}$/);
+    expect(call.data.metadata).toEqual(expect.objectContaining({ _hash: expect.any(String), _prevHash: expect.any(String) }));
+    expect(call.data.severity).toBe("info");
+    expect(call.data.outcome).toBe("success");
   });
 
   it("supports optional resource, metadata, severity, outcome", async () => {
@@ -54,20 +49,17 @@ describe("audit.service", () => {
       severity: "warn",
       outcome: "failure",
     });
-    expect(createMock).toHaveBeenCalledWith({
-      data: {
-        accountId: "acc-2",
-        userId: undefined,
-        action: "erp.doc.create",
-        resource: "Sales Invoice",
-        resourceId: "SINV-001",
-        metadata: { amount: 1000 },
-        ipAddress: undefined,
-        userAgent: undefined,
-        severity: "warn",
-        outcome: "failure",
-      },
-    });
+    const call = createMock.mock.calls[0]![0];
+    expect(call.data.accountId).toBe("acc-2");
+    expect(call.data.userId).toBeUndefined();
+    expect(call.data.action).toBe("erp.doc.create");
+    expect(call.data.resource).toBe("Sales Invoice");
+    expect(call.data.resourceId).toBe("SINV-001");
+    expect(call.data.metadata).toEqual(expect.objectContaining({ amount: 1000, _hash: expect.any(String), _prevHash: expect.any(String) }));
+    expect(call.data.ipAddress).toBeNull();
+    expect(call.data.userAgent).toBeNull();
+    expect(call.data.severity).toBe("warn");
+    expect(call.data.outcome).toBe("failure");
   });
 
   it("logs error when prisma.auditLog.create rejects", async () => {

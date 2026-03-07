@@ -4,7 +4,7 @@ import { logAudit, auditContext } from "@/lib/services/audit.service";
 import { parseAndValidateFilters } from "@/lib/validation/erp-filters";
 import { apiSuccess, apiError, apiMeta, getRequestId } from "@/types/api";
 import { securityHeaders } from "@/lib/security-headers";
-import { checkTieredRateLimit, getClientIdentifier, rateLimitHeaders } from "@/lib/api/rate-limit-tiers";
+import { checkTieredRateLimit, checkErpAccountRateLimit, getClientIdentifier, rateLimitHeaders } from "@/lib/api/rate-limit-tiers";
 import { withPermission } from "@/lib/api/middleware";
 import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/data/prisma";
@@ -28,6 +28,13 @@ export async function GET(request: Request) {
     return NextResponse.json(
       apiError("RATE_LIMIT", "Too many requests. Try again in a minute.", undefined, meta()),
       { status: 429, headers: { ...headers(), ...rateLimitHeaders(rateLimit) } }
+    );
+  }
+  const erpAccountLimit = await checkErpAccountRateLimit(session.accountId);
+  if (!erpAccountLimit.allowed) {
+    return NextResponse.json(
+      apiError("RATE_LIMIT", "Too many ERP requests for this account. Try again in a minute.", undefined, meta()),
+      { status: 429, headers: { ...headers(), ...rateLimitHeaders(erpAccountLimit) } }
     );
   }
   const ctx = auditContext(request);

@@ -10,6 +10,13 @@ function getKey(): Buffer {
   return key;
 }
 
+function getKeyFromHex(secret: string): Buffer {
+  if (!secret || secret.length < 64) throw new Error("Key must be a 64-char hex string (32 bytes)");
+  const key = Buffer.from(secret, "hex");
+  if (key.length !== 32) throw new Error("Key must decode to exactly 32 bytes");
+  return key;
+}
+
 export function encrypt(plaintext: string): string {
   const key = getKey();
   const iv = randomBytes(16);
@@ -20,10 +27,29 @@ export function encrypt(plaintext: string): string {
 }
 
 export function decrypt(ciphertext: string): string {
-  const key = getKey();
   const [ivHex, authTagHex, encryptedHex] = ciphertext.split(":");
   if (!ivHex || !authTagHex || !encryptedHex) throw new Error("Invalid ciphertext format");
-  const decipher = createDecipheriv(ALGORITHM, key, Buffer.from(ivHex, "hex"));
-  decipher.setAuthTag(Buffer.from(authTagHex, "hex"));
-  return decipher.update(Buffer.from(encryptedHex, "hex"), undefined, "utf8") + decipher.final("utf8");
+  const iv = Buffer.from(ivHex, "hex");
+  const authTag = Buffer.from(authTagHex, "hex");
+  const encrypted = Buffer.from(encryptedHex, "hex");
+
+  const tryDecrypt = (key: Buffer): string => {
+    const decipher = createDecipheriv(ALGORITHM, key, iv);
+    decipher.setAuthTag(authTag);
+    return decipher.update(encrypted, undefined, "utf8") + decipher.final("utf8");
+  };
+
+  try {
+    return tryDecrypt(getKey());
+  } catch {
+    const prevSecret = process.env.ENCRYPTION_KEY_PREVIOUS;
+    if (prevSecret) {
+      try {
+        return tryDecrypt(getKeyFromHex(prevSecret));
+      } catch {
+        // fall through to throw
+      }
+    }
+    throw new Error("Decryption failed");
+  }
 }

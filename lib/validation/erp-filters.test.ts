@@ -9,9 +9,20 @@ describe("parseAndValidateFilters", () => {
   });
 
   it("accepts valid single filter", () => {
-    const r = parseAndValidateFilters('[["name", "like", "%INV%"]]');
+    const r = parseAndValidateFilters('[["name", "=", "SINV-001"]]');
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.filters).toBe('[["name","like","%INV%"]]');
+    if (r.ok) expect(r.filters).toBe('[["name","=","SINV-001"]]');
+  });
+
+  it("rejects like value containing % or _", () => {
+    expect(parseAndValidateFilters('[["name", "like", "%INV%"]]').ok).toBe(false);
+    expect(parseAndValidateFilters('[["name", "like", "inv_123"]]').ok).toBe(false);
+  });
+
+  it("accepts like value without wildcards", () => {
+    const r = parseAndValidateFilters('[["name", "like", "INV"]]');
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.filters).toContain("INV");
   });
 
   it("accepts valid filters with allowed operators", () => {

@@ -10,6 +10,7 @@ import { createHmac, randomBytes } from "crypto";
 import { getRedis } from "@/lib/redis";
 import { prisma } from "@/lib/data/prisma";
 import { logger } from "@/lib/logger";
+import { encrypt, decrypt } from "@/lib/encryption";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -60,6 +61,16 @@ export function buildSignatureHeader(secret: string, body: string): { signature:
   const timestamp = Date.now();
   const signature = signPayload(secret, body, timestamp);
   return { signature, timestamp };
+}
+
+/** Encrypt webhook secret before storing in DB. Use when creating or updating WebhookEndpoint. */
+export function encryptWebhookSecret(plainSecret: string): string {
+  return encrypt(plainSecret);
+}
+
+/** Decrypt webhook secret read from DB for signature validation. */
+function decryptWebhookSecret(encryptedSecret: string): string {
+  return decrypt(encryptedSecret);
 }
 
 // ─── Circuit breaker (DB + Redis: durable + fast reads) ───────────────────────
@@ -215,7 +226,14 @@ export async function attemptDelivery(
     data: delivery.payload,
   });
 
-  const { signature, timestamp } = buildSignatureHeader(endpoint.secret, body);
+  let plainSecret: string;
+  try {
+    plainSecret = decryptWebhookSecret(endpoint.secret);
+  } catch {
+    logger.warn("Webhook delivery: failed to decrypt endpoint secret", { endpointId: endpoint.id });
+    return { success: false, error: "Invalid endpoint secret" };
+  }
+  const { signature, timestamp } = buildSignatureHeader(plainSecret, body);
 
   try {
     const res = await fetch(endpoint.url, {

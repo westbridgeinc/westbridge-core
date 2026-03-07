@@ -7,7 +7,7 @@ import { cookies } from "next/headers";
 import { requestPasswordReset } from "@/lib/services/password-reset.service";
 import { apiSuccess, apiError, apiMeta, getRequestId } from "@/types/api";
 import { securityHeaders } from "@/lib/security-headers";
-import { checkTieredRateLimit, getClientIdentifier } from "@/lib/api/rate-limit-tiers";
+import { checkTieredRateLimit, checkEmailRateLimit, getClientIdentifier } from "@/lib/api/rate-limit-tiers";
 import { validateCsrf, CSRF_COOKIE_NAME } from "@/lib/csrf";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
@@ -45,6 +45,12 @@ export async function POST(request: Request) {
     const parsed = bodySchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(apiError("VALIDATION_ERROR", "Valid email required", undefined, meta()), { status: 400, headers: headers() });
+    }
+
+    const emailRateLimit = await checkEmailRateLimit(parsed.data.email);
+    if (!emailRateLimit.allowed) {
+      // Still return 200 to avoid enumeration
+      return NextResponse.json(apiSuccess({ sent: true }, meta()), { headers: headers() });
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";

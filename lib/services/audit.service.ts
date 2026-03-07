@@ -46,6 +46,17 @@ async function setPrevHash(accountId: string, hash: string): Promise<void> {
   } catch { /* non-critical */ }
 }
 
+const SENSITIVE_KEY_REGEX = /password|secret|token|key|credit|ssn/i;
+
+/** Redact sensitive keys in metadata to avoid storing PII. */
+function sanitizeMetadata(obj: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    out[k] = SENSITIVE_KEY_REGEX.test(k) ? "[REDACTED]" : v;
+  }
+  return out;
+}
+
 /** Derive a rough geo-location country code from IP (no external calls). */
 function geoFromIp(ip: string | null | undefined): string | null {
   // Real implementation uses a local GeoIP database (e.g. geoip-lite).
@@ -68,7 +79,14 @@ export async function logAudit(entry: AuditEntry): Promise<void> {
   }
   try {
     const accountId = entry.accountId;
-    const meta = { ...(entry.metadata ?? {}), ...(entry.meta ?? {}) };
+    const rawMeta = { ...(entry.metadata ?? {}), ...(entry.meta ?? {}) };
+    const meta = sanitizeMetadata(rawMeta as Record<string, unknown>);
+    const ipRedacted = typeof entry.ipAddress === "string"
+      ? entry.ipAddress.replace(/\.\d+$/, ".0")
+      : (entry.ipAddress ?? null);
+    const userAgentHashed = typeof entry.userAgent === "string"
+      ? createHash("sha256").update(entry.userAgent).digest("hex").slice(0, 16)
+      : (entry.userAgent ?? null);
     const geo = geoFromIp(entry.ipAddress);
     const prevHash = await getPrevHash(accountId);
 
@@ -87,8 +105,8 @@ export async function logAudit(entry: AuditEntry): Promise<void> {
         action: entry.action,
         resource: entry.resource,
         resourceId: entry.resourceId,
-        ipAddress: entry.ipAddress ?? null,
-        userAgent: entry.userAgent ?? null,
+        ipAddress: ipRedacted,
+        userAgent: userAgentHashed,
         metadata: ({
           ...meta,
           ...(entry.changes ? { changes: entry.changes } : {}),

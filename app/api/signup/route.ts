@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { checkTieredRateLimit, getClientIdentifier, rateLimitHeaders } from "@/lib/api/rate-limit-tiers";
+import { checkTieredRateLimit, checkEmailRateLimit, getClientIdentifier, rateLimitHeaders } from "@/lib/api/rate-limit-tiers";
 import { createAccount } from "@/lib/services/billing.service";
 import { logAudit, auditContext } from "@/lib/services/audit.service";
 import { apiSuccess, apiError, apiMeta, getRequestId } from "@/types/api";
@@ -10,6 +10,14 @@ import { securityHeaders } from "@/lib/security-headers";
 import * as Sentry from "@sentry/nextjs";
 
 const MAX_BODY_BYTES = 1_048_576;
+
+const DISPOSABLE_EMAIL_DOMAINS = new Set([
+  "mailinator.com", "guerrillamail.com", "tempmail.com", "10minutemail.com",
+  "throwaway.email", "yopmail.com", "sharklasers.com", "guerrillamailblock.com",
+  "grr.la", "spam4.me", "trashmail.com", "maildrop.cc", "dispostable.com",
+  "fakeinbox.com", "spamgourmet.com", "mytemp.email", "temp-mail.org",
+  "discard.email", "spamex.com", "trashmail.net",
+]);
 
 export async function POST(request: Request) {
   const start = Date.now();
@@ -74,6 +82,33 @@ export async function POST(request: Request) {
     return NextResponse.json(
       apiError("VALIDATION_ERROR", message, undefined, meta()),
       { status: 400, headers: headers() }
+    );
+  }
+
+  const emailDomain = parsed.data.email.split("@")[1]?.toLowerCase();
+  if (emailDomain && DISPOSABLE_EMAIL_DOMAINS.has(emailDomain)) {
+    return NextResponse.json(
+      apiError("VALIDATION_ERROR", "Disposable email addresses are not allowed.", undefined, meta()),
+      { status: 400, headers: headers() }
+    );
+  }
+
+  const emailRateLimit = await checkEmailRateLimit(parsed.data.email);
+  if (!emailRateLimit.allowed) {
+    const systemAccountIdForAudit = process.env.SYSTEM_ACCOUNT_ID;
+    if (systemAccountIdForAudit) {
+      void logAudit({
+        accountId: systemAccountIdForAudit,
+        action: "account.signup.rate_limited",
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+        severity: "warn",
+        outcome: "failure",
+      });
+    }
+    return NextResponse.json(
+      apiError("RATE_LIMIT", "Too many attempts. Try again in a minute.", undefined, meta()),
+      { status: 429, headers: { ...headers(), ...rateLimitHeaders(emailRateLimit) } }
     );
   }
 

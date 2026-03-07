@@ -11,7 +11,10 @@ export function generateNonce(): string {
 
 /** Build a strict Content-Security-Policy header value. */
 export function buildCsp(nonce: string): string {
-  const sentryHost = "https://*.ingest.sentry.io";
+  const dsn = process.env.SENTRY_DSN ?? process.env.NEXT_PUBLIC_SENTRY_DSN;
+  const sentryHost = dsn
+    ? `https://${new URL(dsn).host}`
+    : "https://*.ingest.sentry.io";
   return [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}'`,

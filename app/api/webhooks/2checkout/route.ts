@@ -7,11 +7,34 @@ import {
 } from "@/lib/services/billing.service";
 import { logAudit, auditContext } from "@/lib/services/audit.service";
 import { securityHeaders } from "@/lib/security-headers";
+import { getRedis } from "@/lib/redis";
+import { logger } from "@/lib/logger";
+
+const WEBHOOK_IDEMPOTENCY_TTL_SEC = 24 * 60 * 60; // 24 hours
+
+/** 2Checkout IPN source IP ranges (CIDR). */
+const TWOCHECKOUT_IP_PREFIXES = [
+  "86.105.46.",   // 86.105.46.0/24
+  "195.65.26.",   // 195.65.26.0/24
+  "195.242.",     // 195.242.0.0/16
+];
+
+function is2CheckoutIP(ip: string): boolean {
+  const trimmed = ip.trim();
+  return TWOCHECKOUT_IP_PREFIXES.some((prefix) => trimmed.startsWith(prefix));
+}
 
 export async function POST(request: Request) {
   const start = Date.now();
   const headers = () => ({ ...securityHeaders(), "X-Response-Time": `${Date.now() - start}ms` });
   const ctx = auditContext(request);
+  const clientIP = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? request.headers.get("x-real-ip") ?? "";
+  if (clientIP && !is2CheckoutIP(clientIP)) {
+    if (process.env.NODE_ENV === "production") {
+      return new NextResponse("Forbidden", { status: 403, headers: headers() });
+    }
+    logger.warn("2Checkout webhook from non-allowlisted IP (non-production)", { ip: clientIP });
+  }
   const id = getClientIdentifier(request);
   const rateLimit = await checkTieredRateLimit(id, "anonymous", "/api/webhooks/2checkout");
   if (!rateLimit.allowed) {
@@ -62,6 +85,18 @@ export async function POST(request: Request) {
 
   if (!isPaymentSuccess(paramsRecord)) {
     return new NextResponse("OK", { status: 200, headers: headers() });
+  }
+
+  const refno = paramsRecord.REFNO ?? paramsRecord.ORDERNO ?? paramsRecord.ORDER_NUMBER ?? "";
+  if (refno) {
+    const redis = getRedis();
+    if (redis) {
+      const idempotencyKey = `webhook:2co:${refno}`;
+      const set = await redis.set(idempotencyKey, "1", "EX", WEBHOOK_IDEMPOTENCY_TTL_SEC, "NX");
+      if (set !== "OK") {
+        return new NextResponse("OK", { status: 200, headers: headers() });
+      }
+    }
   }
 
   const accountId = paramsRecord.MERCHANT_ORDER_ID ?? paramsRecord.EXTERNAL_REFERENCE ?? paramsRecord.REFNO;

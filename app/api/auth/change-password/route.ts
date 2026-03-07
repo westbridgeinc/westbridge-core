@@ -112,11 +112,17 @@ export async function POST(request: Request) {
       Sentry.captureMessage("change-password: ERPNext update failed", { extra: { status: erpRes.status, body: text } });
     }
 
-    // Update hash in Prisma
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { passwordHash: hashPassword(newPassword) },
-    });
+    // Update hash and revoke all other sessions (keep current session only)
+    const tokenHash = createHash("sha256").update(token).digest("hex");
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash: hashPassword(newPassword) },
+      }),
+      prisma.session.deleteMany({
+        where: { userId: user.id, token: { not: tokenHash } },
+      }),
+    ]);
 
     return NextResponse.json(apiSuccess({ message: "Password updated successfully" }, meta()), { headers: hdrs() });
   } catch (err) {

@@ -12,6 +12,11 @@ function getSecret(): string {
   return s;
 }
 
+function getPreviousSecret(): string | null {
+  const s = process.env.CSRF_SECRET_PREVIOUS;
+  return s && s.length > 0 ? s : null;
+}
+
 function safeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   try {
@@ -23,24 +28,32 @@ function safeEqual(a: string, b: string): boolean {
 
 /**
  * Generate a CSRF token (HMAC of random value so we can verify it wasn't tampered).
+ * Uses full 32-byte random value and full 32-byte HMAC output (no truncation).
  */
 export function generateCsrfToken(): string {
   const secret = getSecret();
-  const value = randomBytes(24).toString("base64url");
-  const signature = createHash("sha256").update(`${secret}:${value}`).digest("base64url").slice(0, 24);
+  const value = randomBytes(32).toString("base64url");
+  const signature = createHash("sha256").update(`${secret}:${value}`).digest("base64url");
   return `${value}.${signature}`;
 }
 
 /**
  * Verify token format and signature. Returns true if valid.
+ * Tries CSRF_SECRET first, then CSRF_SECRET_PREVIOUS if set (for rotation).
  */
 export function verifyCsrfToken(token: string | null | undefined): boolean {
   if (!token || typeof token !== "string") return false;
   const [value, signature] = token.split(".");
   if (!value || !signature) return false;
   const secret = getSecret();
-  const expected = createHash("sha256").update(`${secret}:${value}`).digest("base64url").slice(0, 24);
-  return safeEqual(signature, expected);
+  const expected = createHash("sha256").update(`${secret}:${value}`).digest("base64url");
+  if (safeEqual(signature, expected)) return true;
+  const prev = getPreviousSecret();
+  if (prev) {
+    const expectedPrev = createHash("sha256").update(`${prev}:${value}`).digest("base64url");
+    if (safeEqual(signature, expectedPrev)) return true;
+  }
+  return false;
 }
 
 /**

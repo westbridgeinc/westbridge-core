@@ -110,13 +110,14 @@ export async function applyPasswordReset(
     return err(e instanceof Error ? e.message : "ERPNext unreachable");
   }
 
-  // Mark token used and reset lockout state
+  // Mark token used, reset lockout state, and revoke all sessions (stolen tokens invalid after password change)
   await prisma.$transaction([
     prisma.passwordResetToken.update({ where: { id: tokenId }, data: { usedAt: new Date() } }),
     prisma.user.update({
       where: { id: userId },
       data: { failedLoginAttempts: 0, lockedUntil: null, passwordChangedAt: new Date() },
     }),
+    prisma.session.deleteMany({ where: { userId } }),
   ]);
 
   return ok({ success: true });

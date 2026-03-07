@@ -3,6 +3,7 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  productionBrowserSourceMaps: false,
   // Project root when running from v1 (e.g. npm run dev)
   turbopack: { root: process.cwd() },
   async headers() {

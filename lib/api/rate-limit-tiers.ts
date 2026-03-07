@@ -42,6 +42,10 @@ const ENDPOINT_WINDOW_MS: Record<string, number> = {
   "/api/audit/export": 60 * 60 * 1000,
 };
 
+/** Global per-email rate limit (auth endpoints): 5 requests per minute across login, forgot-password, signup. */
+const EMAIL_RATE_LIMIT = 5;
+const EMAIL_WINDOW_MS = 60_000;
+
 export function getClientIdentifier(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
   const ip = forwarded ? forwarded.split(",")[0]?.trim() : null;
@@ -110,6 +114,81 @@ export async function checkTieredRateLimit(
   } catch (e) {
     logger.warn("Rate limit: Redis error", { error: e instanceof Error ? e.message : String(e) });
     return { allowed: false, limit, remaining: 0, reset, retryAfter: 60 };
+  }
+}
+
+/**
+ * Check global per-email rate limit for auth endpoints (login, forgot-password, signup).
+ * Prevents spreading brute-force attempts across endpoints.
+ */
+export async function checkEmailRateLimit(email: string): Promise<RateLimitResult> {
+  const normalised = email.trim().toLowerCase();
+  const key = `rl2:email:${normalised}`;
+  const now = Date.now();
+  const windowStart = now - EMAIL_WINDOW_MS;
+  const reset = Math.ceil((now + EMAIL_WINDOW_MS) / 1000);
+
+  const redis = getRedis();
+  if (!redis) {
+    logger.warn("Rate limit: Redis unavailable, denying request");
+    return { allowed: false, limit: EMAIL_RATE_LIMIT, remaining: 0, reset, retryAfter: 60 };
+  }
+
+  try {
+    const pipeline = redis.pipeline();
+    pipeline.zremrangebyscore(key, 0, windowStart);
+    const member = `${now}:${Math.random().toString(36).slice(2)}`;
+    pipeline.zadd(key, now, member);
+    pipeline.zcard(key);
+    pipeline.pexpire(key, EMAIL_WINDOW_MS * 2);
+    const results = await pipeline.exec();
+    const count = (results?.[2]?.[1] as number) ?? 1;
+    const allowed = count <= EMAIL_RATE_LIMIT;
+    const remaining = Math.max(0, EMAIL_RATE_LIMIT - count);
+    if (!allowed) {
+      return { allowed: false, limit: EMAIL_RATE_LIMIT, remaining: 0, reset, retryAfter: Math.ceil(EMAIL_WINDOW_MS / 1000) };
+    }
+    return { allowed: true, limit: EMAIL_RATE_LIMIT, remaining, reset };
+  } catch (e) {
+    logger.warn("Rate limit: Redis error", { error: e instanceof Error ? e.message : String(e) });
+    return { allowed: false, limit: EMAIL_RATE_LIMIT, remaining: 0, reset, retryAfter: 60 };
+  }
+}
+
+/** Per-account ERP limit: 200 requests per minute (prevents single tenant DDoSing shared ERPNext). */
+const ERP_ACCOUNT_LIMIT = 200;
+const ERP_ACCOUNT_WINDOW_MS = 60_000;
+
+export async function checkErpAccountRateLimit(accountId: string): Promise<RateLimitResult> {
+  const key = `rl2:erp:${accountId}`;
+  const now = Date.now();
+  const windowStart = now - ERP_ACCOUNT_WINDOW_MS;
+  const reset = Math.ceil((now + ERP_ACCOUNT_WINDOW_MS) / 1000);
+
+  const redis = getRedis();
+  if (!redis) {
+    logger.warn("Rate limit: Redis unavailable, denying request");
+    return { allowed: false, limit: ERP_ACCOUNT_LIMIT, remaining: 0, reset, retryAfter: 60 };
+  }
+
+  try {
+    const pipeline = redis.pipeline();
+    pipeline.zremrangebyscore(key, 0, windowStart);
+    const member = `${now}:${Math.random().toString(36).slice(2)}`;
+    pipeline.zadd(key, now, member);
+    pipeline.zcard(key);
+    pipeline.pexpire(key, ERP_ACCOUNT_WINDOW_MS * 2);
+    const results = await pipeline.exec();
+    const count = (results?.[2]?.[1] as number) ?? 1;
+    const allowed = count <= ERP_ACCOUNT_LIMIT;
+    const remaining = Math.max(0, ERP_ACCOUNT_LIMIT - count);
+    if (!allowed) {
+      return { allowed: false, limit: ERP_ACCOUNT_LIMIT, remaining: 0, reset, retryAfter: Math.ceil(ERP_ACCOUNT_WINDOW_MS / 1000) };
+    }
+    return { allowed: true, limit: ERP_ACCOUNT_LIMIT, remaining, reset };
+  } catch (e) {
+    logger.warn("Rate limit: Redis error", { error: e instanceof Error ? e.message : String(e) });
+    return { allowed: false, limit: ERP_ACCOUNT_LIMIT, remaining: 0, reset, retryAfter: 60 };
   }
 }
 

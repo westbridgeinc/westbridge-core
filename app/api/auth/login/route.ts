@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { checkTieredRateLimit, getClientIdentifier, rateLimitHeaders } from "@/lib/api/rate-limit-tiers";
+import { checkTieredRateLimit, checkEmailRateLimit, getClientIdentifier, rateLimitHeaders } from "@/lib/api/rate-limit-tiers";
 import { login } from "@/lib/services/auth.service";
 import { createSession } from "@/lib/services/session.service";
 import { logAudit, auditContext } from "@/lib/services/audit.service";
@@ -89,6 +89,26 @@ export async function POST(request: Request) {
   }
 
   const { email, password } = parsed.data;
+  const emailRateLimit = await checkEmailRateLimit(email);
+  if (!emailRateLimit.allowed) {
+    const systemAccountId = process.env.SYSTEM_ACCOUNT_ID;
+    if (systemAccountId) {
+      void logAudit({
+        accountId: systemAccountId,
+        action: "auth.login.rate_limited",
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+        severity: "warn",
+        outcome: "failure",
+      });
+    }
+    log(429);
+    return NextResponse.json(
+      apiError("RATE_LIMIT", "Too many attempts. Try again in a minute.", undefined, meta()),
+      { status: 429, headers: { ...headers(), ...rateLimitHeaders(emailRateLimit) } }
+    );
+  }
+
   const account = await prisma.account.findUnique({ where: { email } }).catch(() => null);
   if (!account) {
     log(401);
