@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonTable } from "@/components/ui/SkeletonTable";
@@ -11,6 +11,7 @@ import { MODULE_EMPTY_STATES, EMPTY_STATE_SUPPORT_LINE } from "@/lib/dashboard/e
 import { formatCurrency } from "@/lib/locale/currency";
 import { Truck } from "lucide-react";
 import { formatDateLong } from "@/lib/locale/date";
+import { AIChatPanel } from "@/components/ai/AIChatPanel";
 
 interface PurchaseOrder {
   id: string;
@@ -27,11 +28,11 @@ function fmtDate(d: string): string {
 }
 
 const columns: Column<PurchaseOrder>[] = [
-  { id: "id", header: "PO #", accessor: (r) => <span className="font-medium" style={{ color: "var(--color-ink)" }}>{r.id}</span>, sortValue: (r) => r.id },
-  { id: "supplier", header: "Supplier", accessor: (r) => <span style={{ color: "var(--color-ink-secondary)" }}>{r.supplier}</span>, sortValue: (r) => r.supplier },
-  { id: "amount", header: "Amount", align: "right", accessor: (r) => <span className="font-medium" style={{ color: "var(--color-ink)" }}>{formatCurrency(r.amount, "GYD")}</span>, sortValue: (r) => r.amount },
-  { id: "orderDate", header: "Order Date", accessor: (r) => <span style={{ color: "var(--color-ink-tertiary)" }}>{fmtDate(r.orderDate)}</span>, sortValue: (r) => r.orderDate },
-  { id: "expected", header: "Expected", accessor: (r) => <span style={{ color: "var(--color-ink-tertiary)" }}>{fmtDate(r.expected)}</span>, sortValue: (r) => r.expected },
+  { id: "id", header: "PO #", accessor: (r) => <span className="font-medium text-foreground">{r.id}</span>, sortValue: (r) => r.id },
+  { id: "supplier", header: "Supplier", accessor: (r) => <span className="text-muted-foreground">{r.supplier}</span>, sortValue: (r) => r.supplier },
+  { id: "amount", header: "Amount", align: "right", accessor: (r) => <span className="font-medium text-foreground">{formatCurrency(r.amount, "USD")}</span>, sortValue: (r) => r.amount },
+  { id: "orderDate", header: "Order Date", accessor: (r) => <span className="text-muted-foreground/60">{fmtDate(r.orderDate)}</span>, sortValue: (r) => r.orderDate },
+  { id: "expected", header: "Expected", accessor: (r) => <span className="text-muted-foreground/60">{fmtDate(r.expected)}</span>, sortValue: (r) => r.expected },
   { id: "status", header: "Status", accessor: (r) => <Badge status={r.status}>{r.status}</Badge> },
 ];
 
@@ -66,45 +67,60 @@ export default function ProcurementPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const action = <Button variant="primary" size="md">Create PO</Button>;
-
   if (error) {
     return (
-      <div>
-        <PageHeader title="Procurement" description="Purchase orders and suppliers" action={action} />
-        <div className="mt-8 flex flex-col items-center rounded-[var(--radius-md)] border p-12" style={{ borderColor: "var(--color-border)", background: "var(--color-ground-elevated)" }}>
-          <p style={{ color: "var(--color-error)" }}>{error}</p>
-          <Button variant="secondary" size="sm" onClick={load} className="mt-4">Retry</Button>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Procurement</h1>
+            <p className="text-sm text-muted-foreground">Purchase orders and suppliers</p>
+          </div>
+          <Button variant="primary">+ Create New</Button>
         </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <p className="text-destructive">{error}</p>
+            <Button variant="outline" size="sm" onClick={load} className="mt-4">Retry</Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div>
-      <PageHeader title="Procurement" description="Purchase orders and suppliers" action={action} />
-      <div className="mt-8">
-        {loading ? (
-          <SkeletonTable rows={6} columns={6} />
-        ) : (
-          <DataTable
-            columns={columns}
-            data={data}
-            keyExtractor={(r) => r.id}
-            emptyState={
-              <EmptyState
-                icon={<Truck className="h-6 w-6" />}
-                title={MODULE_EMPTY_STATES.procurement.title}
-                description={MODULE_EMPTY_STATES.procurement.description}
-                actionLabel={MODULE_EMPTY_STATES.procurement.actionLabel}
-                actionHref={MODULE_EMPTY_STATES.procurement.actionLink}
-                supportLine={EMPTY_STATE_SUPPORT_LINE}
-              />
-            }
-            pageSize={20}
-          />
-        )}
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Procurement</h1>
+          <p className="text-sm text-muted-foreground">Purchase orders and suppliers</p>
+        </div>
+        <Button variant="primary">+ Create New</Button>
       </div>
+      <Card>
+        <CardContent className="p-0">
+          {loading ? (
+            <SkeletonTable rows={6} columns={6} />
+          ) : (
+            <DataTable
+              columns={columns}
+              data={data}
+              keyExtractor={(r) => r.id}
+              emptyState={
+                <EmptyState
+                  icon={<Truck className="h-6 w-6" />}
+                  title={MODULE_EMPTY_STATES.procurement.title}
+                  description={MODULE_EMPTY_STATES.procurement.description}
+                  actionLabel={MODULE_EMPTY_STATES.procurement.actionLabel}
+                  actionHref={MODULE_EMPTY_STATES.procurement.actionLink}
+                  supportLine={EMPTY_STATE_SUPPORT_LINE}
+                />
+              }
+              pageSize={20}
+            />
+          )}
+        </CardContent>
+      </Card>
+      <AIChatPanel module="inventory" />
     </div>
   );
 }

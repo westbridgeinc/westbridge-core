@@ -71,3 +71,18 @@ export type AuditLog = Prisma.AuditLogModel
  * 
  */
 export type ApiKey = Prisma.ApiKeyModel
+/**
+ * Model InviteToken
+ * 
+ */
+export type InviteToken = Prisma.InviteTokenModel
+/**
+ * Model PasswordResetToken
+ * 
+ */
+export type PasswordResetToken = Prisma.PasswordResetTokenModel
+/**
+ * Model WebhookEndpoint
+ * 
+ */
+export type WebhookEndpoint = Prisma.WebhookEndpointModel

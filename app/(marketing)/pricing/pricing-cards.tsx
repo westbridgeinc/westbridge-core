@@ -2,126 +2,189 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { PLANS } from "@/lib/modules";
+import { Check, Zap, Info } from "lucide-react";
+import { PLANS, MODULE_BUNDLES, formatLimit } from "@/lib/modules";
 import { ROUTES } from "@/lib/config/site";
 import { formatCurrency } from "@/lib/locale/currency";
-import type { CurrencyCode } from "@/lib/constants";
-import { DISPLAY_RATE_USD_TO_GYD } from "@/lib/constants";
 
-function priceInCurrency(usd: number, currency: CurrencyCode): number {
-  if (currency === "USD") return usd;
-  return Math.round(usd * DISPLAY_RATE_USD_TO_GYD);
-}
+const USAGE_ROWS = [
+  { label: "Users",                  key: "users" as const,              unit: "users" },
+  { label: "Storage",                key: "storageGB" as const,          unit: "GB" },
+  { label: "ERP records / mo",       key: "erpRecordsPerMonth" as const,  unit: "" },
+  { label: "Claude AI queries / mo", key: "aiQueriesPerMonth" as const,  unit: "" },
+  { label: "API calls / mo",         key: "apiCallsPerMonth" as const,   unit: "" },
+];
 
 export function PricingCards() {
-  const [currency, setCurrency] = useState<CurrencyCode>("GYD");
   const [annual, setAnnual] = useState(false);
+  const [showUsage, setShowUsage] = useState(false);
 
   return (
     <>
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-6">
-        <div className="flex rounded-lg border border-[var(--color-border)] p-1" style={{ background: "var(--color-ground-section)" }}>
-          <button
-            type="button"
-            onClick={() => setCurrency("GYD")}
-            className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-              currency === "GYD" ? "bg-[var(--color-ground)] text-[var(--color-ink)] shadow-sm" : "text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)]"
-            }`}
-          >
-            GYD
-          </button>
-          <button
-            type="button"
-            onClick={() => setCurrency("USD")}
-            className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-              currency === "USD" ? "bg-[var(--color-ground)] text-[var(--color-ink)] shadow-sm" : "text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)]"
-            }`}
-          >
-            USD
-          </button>
-        </div>
-        <label className="flex cursor-pointer items-center gap-2 text-body" style={{ color: "var(--color-ink-secondary)" }}>
-          <input
-            type="checkbox"
-            checked={annual}
-            onChange={(e) => setAnnual(e.target.checked)}
-            className="h-4 w-4 rounded border-[var(--color-border)]"
-          />
-          <span>Annual billing</span>
-          {annual && (
-            <span
-              className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
-              style={{ background: "var(--color-accent-gold)", color: "var(--color-ink)" }}
-            >
-              2 months free
-            </span>
-          )}
-        </label>
+      {/* Billing toggle */}
+      <div className="mt-8 flex items-center justify-center gap-3">
+        <span className={`text-sm font-medium ${!annual ? "text-foreground" : "text-muted-foreground"}`}>Monthly</span>
+        <button
+          role="switch"
+          aria-checked={annual}
+          onClick={() => setAnnual((v) => !v)}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${annual ? "bg-primary" : "bg-muted-foreground/30"}`}
+        >
+          <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${annual ? "translate-x-6" : "translate-x-1"}`} />
+        </button>
+        <span className={`text-sm font-medium ${annual ? "text-foreground" : "text-muted-foreground"}`}>
+          Annual
+          <span className="ml-1.5 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400">
+            Save 2 months
+          </span>
+        </span>
       </div>
 
-      <div className="mx-auto mt-12 grid max-w-4xl grid-cols-1 gap-6 md:grid-cols-3" style={{ gap: "24px" }}>
+      {/* Plan cards */}
+      <div className="mx-auto mt-10 grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
         {PLANS.map((plan) => {
-          const monthly = priceInCurrency(plan.pricePerUserPerMonth, currency);
-          const displayPrice = annual ? Math.round(monthly * 10) : monthly; // 10 months for annual
-          const isPopular = plan.id === "professional";
+          const price = annual ? plan.annualPricePerMonth : plan.pricePerMonth;
+          const isPopular = plan.id === "business";
+          const bundles = MODULE_BUNDLES.filter((b) => plan.includedBundleIds.includes(b.id));
+
           return (
             <div
               key={plan.id}
-              className={`card relative transition-shadow hover:shadow-lg ${isPopular ? "ring-2" : ""}`}
-              style={
-                isPopular
-                  ? { borderColor: "var(--color-primary)", boxShadow: "var(--shadow-card-hover)" }
-                  : undefined
-              }
+              className={`relative flex flex-col rounded-2xl border bg-card p-7 transition-shadow hover:shadow-xl ${
+                isPopular ? "border-primary shadow-lg ring-2 ring-primary" : "border-border"
+              }`}
             >
-              {isPopular && (
-                <span
-                  className="absolute -top-2.5 left-6 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider"
-                  style={{ background: "var(--color-accent-gold)", color: "var(--color-ink)" }}
-                >
-                  Most popular
+              {plan.badge && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow">
+                  {plan.badge}
                 </span>
               )}
-              <p className="text-h3 font-semibold mt-1" style={{ color: "var(--color-ink)" }}>
-                {plan.name}
-              </p>
-              <p className="mt-2 text-[1.75rem] font-semibold tracking-tight" style={{ color: "var(--color-ink)" }}>
-                {formatCurrency(displayPrice, currency)}
-                <span className="text-body font-normal" style={{ color: "var(--color-ink-tertiary)" }}>
-                  /user/mo
+
+              {/* Plan name + price */}
+              <p className="text-lg font-bold text-foreground">{plan.name}</p>
+              <div className="mt-3 flex items-end gap-1">
+                <span className="text-5xl font-bold tracking-tight text-foreground">
+                  {formatCurrency(price, "USD")}
                 </span>
-              </p>
-              {annual && (
-                <p className="mt-1 text-caption" style={{ color: "var(--color-ink-muted)" }}>
-                  Billed annually
-                </p>
-              )}
-              <ul className="mt-6 space-y-2 text-body" style={{ color: "var(--color-ink-secondary)" }}>
-                {plan.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2">
-                    <span className="mt-0.5 flex-shrink-0" style={{ color: "var(--color-teal-500, #14b8a6)" }} aria-hidden="true">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path d="M3 8.5L6.5 12L13 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </span>
-                    <span>{f}</span>
+                <span className="mb-1.5 text-sm text-muted-foreground">/mo</span>
+              </div>
+              {annual
+                ? <p className="mt-1 text-xs text-muted-foreground/60">Billed annually — {formatCurrency(price * 12, "USD")}/yr</p>
+                : <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400">{formatCurrency(plan.annualPricePerMonth, "USD")}/mo billed annually</p>
+              }
+
+              {/* AI badge */}
+              <div className="mt-4 flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-2">
+                <Zap className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs font-semibold text-primary">
+                  {plan.limits.aiQueriesPerMonth === -1
+                    ? "Unlimited Claude AI"
+                    : `${plan.limits.aiQueriesPerMonth} AI queries / mo`}
+                </span>
+              </div>
+
+              {/* Included bundles */}
+              <div className="mt-5 space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/60">Included modules</p>
+                {bundles.map((b) => (
+                  <div key={b.id} className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Check className="h-3.5 w-3.5 flex-shrink-0 text-emerald-500" />
+                    {b.name}
+                  </div>
+                ))}
+              </div>
+
+              {/* Features */}
+              <ul className="mt-5 flex-1 space-y-2 border-t border-border pt-4">
+                {plan.features.slice(2).map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <Check className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-emerald-500" />
+                    {f}
                   </li>
                 ))}
               </ul>
+
               <Link
                 href={plan.id === "enterprise" ? "mailto:sales@westbridge.gy" : ROUTES.signup}
-                className="mt-8 flex w-full justify-center rounded-lg border border-transparent px-6 py-3 text-[0.9375rem] font-semibold transition-all duration-150"
-                style={
+                className={`mt-7 flex w-full items-center justify-center rounded-xl px-6 py-3 text-sm font-bold transition-all duration-150 ${
                   isPopular
-                    ? { background: "var(--color-primary)", color: "white" }
-                    : { background: "var(--color-ground-section)", color: "var(--color-ink)" }
-                }
+                    ? "bg-primary text-primary-foreground hover:opacity-90"
+                    : "border border-border bg-background text-foreground hover:bg-muted"
+                }`}
               >
                 {plan.id === "enterprise" ? "Talk to sales" : "Start free trial"}
               </Link>
             </div>
           );
         })}
+      </div>
+
+      {/* Usage limits comparison toggle */}
+      <div className="mx-auto mt-8 max-w-5xl">
+        <button
+          onClick={() => setShowUsage((v) => !v)}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <Info className="h-4 w-4" />
+          {showUsage ? "Hide" : "Show"} usage limits & overage rates
+        </button>
+
+        {showUsage && (
+          <div className="mt-4 overflow-hidden rounded-xl border border-border bg-card">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted">
+                  <th className="py-3 pl-5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground/60">Limit</th>
+                  {PLANS.map((p) => (
+                    <th key={p.id} className="py-3 px-4 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground/60">{p.name}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {USAGE_ROWS.map((row) => (
+                  <tr key={row.key} className="border-b border-border">
+                    <td className="py-3 pl-5 font-medium text-foreground">{row.label}</td>
+                    {PLANS.map((p) => (
+                      <td key={p.id} className="py-3 px-4 text-center text-muted-foreground">
+                        {formatLimit(p.limits[row.key], row.unit)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+                <tr className="bg-muted/40">
+                  <td className="py-3 pl-5 font-semibold text-foreground">Overage — extra user</td>
+                  {PLANS.map((p) => (
+                    <td key={p.id} className="py-3 px-4 text-center text-muted-foreground">
+                      {p.overageRates.perExtraUser === 0 ? "—" : `$${p.overageRates.perExtraUser}/user/mo`}
+                    </td>
+                  ))}
+                </tr>
+                <tr>
+                  <td className="py-3 pl-5 font-semibold text-foreground">Overage — extra AI query</td>
+                  {PLANS.map((p) => (
+                    <td key={p.id} className="py-3 px-4 text-center text-muted-foreground">
+                      {p.overageRates.perExtraAiQuery === 0 ? "—" : `$${p.overageRates.perExtraAiQuery}/query`}
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Add-on bundles */}
+      <div className="mx-auto mt-8 max-w-5xl rounded-xl border border-border bg-muted/40 p-5">
+        <p className="text-sm font-bold text-foreground">Need additional modules?</p>
+        <p className="mt-1 text-sm text-muted-foreground">Add bundles to any plan. All bundles include Claude AI features.</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {MODULE_BUNDLES.map((b) => (
+            <span key={b.id} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground">
+              <Zap className="h-3 w-3 text-primary" />
+              {b.name} — <span className="text-primary font-semibold">{formatCurrency(b.standalonePrice, "USD")}/mo</span>
+            </span>
+          ))}
+        </div>
       </div>
     </>
   );

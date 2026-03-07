@@ -1,42 +1,49 @@
-#!/usr/bin/env bash
-# Westbridge local setup: env, deps, DB. Run from project root.
-
+#!/bin/bash
+# One-command local development setup.
+# Installs deps, starts Docker services, runs migrations, seeds DB, starts dev server.
 set -e
-cd "$(dirname "$0")/.."
 
-echo "=== Westbridge setup ==="
+echo "🚀 Westbridge local setup"
+echo ""
 
-# 1. .env
+# 1. Check prerequisites
+command -v node >/dev/null 2>&1 || { echo "❌ Node.js 20+ required"; exit 1; }
+command -v docker >/dev/null 2>&1 || { echo "❌ Docker required"; exit 1; }
+NODE_VER=$(node -e "process.stdout.write(process.version.slice(1).split('.')[0])")
+if [ "$NODE_VER" -lt 20 ]; then echo "❌ Node.js 20+ required, found $NODE_VER"; exit 1; fi
+
+# 2. Copy env if missing
 if [ ! -f .env ]; then
-  echo "Creating .env from .env.example..."
   cp .env.example .env
-  echo "  .env created. Edit DATABASE_URL if not using Docker Postgres."
-else
-  echo ".env already exists."
+  echo "📋 Created .env from .env.example"
+  echo "   ⚠️  Set ENCRYPTION_KEY, SESSION_SECRET, CSRF_SECRET before continuing"
+  echo "   Run: openssl rand -hex 32  (for ENCRYPTION_KEY and SESSION_SECRET)"
+  echo "   Run: openssl rand -base64 32  (for CSRF_SECRET)"
+  echo ""
 fi
 
-# 2. Dependencies
-echo "Installing npm dependencies..."
+# 3. Install dependencies
+echo "📦 Installing dependencies..."
 npm install
 
-# 3. Prisma
-echo "Generating Prisma client..."
+# 4. Start Docker services
+echo "🐳 Starting Docker services (postgres + redis)..."
+docker-compose up -d postgres redis
+echo "   Waiting for postgres..."
+until docker-compose exec -T postgres pg_isready -U postgres >/dev/null 2>&1; do sleep 1; done
+echo "   ✓ Postgres ready"
+
+# 5. Generate Prisma client + run migrations
+echo "🗄️  Running database migrations..."
 npx prisma generate
+npx prisma migrate deploy
+echo "   ✓ Migrations applied"
 
-# 4. Database (requires Postgres running)
-echo "Pushing schema to database (creates tables if missing)..."
-if npx prisma db push 2>/dev/null; then
-  echo "  Database ready."
-else
-  echo "  WARNING: Could not reach database. Start Docker first:"
-  echo "    docker compose up -d postgres"
-  echo "  Then run: npx prisma db push"
-fi
-
+# 6. Start dev server
 echo ""
-echo "=== Next steps ==="
-echo "1. Start backend:  docker compose up -d"
-echo "2. (Optional) Create ERPNext site: see SETUP.md"
-echo "3. Run app:        npm run dev"
-echo "4. Open:           http://localhost:3000"
+echo "✅ Setup complete! Starting dev server..."
+echo "   App:     http://localhost:3000"
+echo "   Health:  http://localhost:3000/api/health"
+echo "   API docs: http://localhost:3000/api/docs"
 echo ""
+npm run dev

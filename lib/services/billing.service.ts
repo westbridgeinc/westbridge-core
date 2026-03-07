@@ -9,9 +9,11 @@ import {
   isIPNSuccess,
   type PlanSlug,
 } from "@/lib/data/twocheckout.client";
-import { ok, type Result } from "@/lib/utils/result";
+import { ok, err, type Result } from "@/lib/utils/result";
+import { sendEmail } from "@/lib/email";
+import { accountActivatedEmail } from "@/lib/email/templates";
 
-const VALID_PLANS: PlanSlug[] = ["Starter", "Professional", "Enterprise", "Growth", "Business"];
+const VALID_PLANS: PlanSlug[] = ["Starter", "Business", "Enterprise"];
 
 export interface CreateAccountInput {
   email: string;
@@ -40,36 +42,38 @@ export async function createAccount(
     return { ok: false, error: "Invalid plan" };
   }
 
-  const existing = await prisma.account.findUnique({ where: { email: email.trim() } });
-  if (existing) {
-    if (existing.status === "active") {
-      return { ok: false, error: "An account with this email already exists. Please sign in." };
-    }
-    await prisma.account.delete({ where: { email: email.trim() } });
-  }
+  try {
+    const account = await prisma.$transaction(async (tx) => {
+      const existing = await tx.account.findUnique({ where: { email: email.trim() } });
+      if (existing) {
+        if (existing.status === "active") {
+          throw new Error("An account with this email already exists. Please sign in.");
+        }
+        await tx.account.delete({ where: { email: email.trim() } });
+      }
+      return tx.account.create({
+        data: {
+          email: email.trim(),
+          companyName: companyName.trim(),
+          plan: planSlug,
+          modulesSelected: Array.isArray(modulesSelected) ? modulesSelected : [],
+          status: "pending",
+        },
+      });
+    });
 
-  const account = await prisma.account.create({
-    data: {
-      email: email.trim(),
-      companyName: companyName.trim(),
-      plan: planSlug,
-      modulesSelected: Array.isArray(modulesSelected) ? modulesSelected : [],
-      status: "pending",
-    },
-  });
+    const returnUrl = `${returnBaseUrl}/signup?success=true&accountId=${account.id}`;
+    const paymentUrl = getPaymentLinkUrl(planSlug, account.id, returnUrl);
 
-  const returnUrl = `${returnBaseUrl}/signup?success=true&accountId=${account.id}`;
-  const paymentUrl = getPaymentLinkUrl(planSlug, account.id, returnUrl);
-
-  return {
-    ok: true,
-    data: {
+    return ok({
       accountId: account.id,
       paymentUrl: paymentUrl || null,
-      status: "pending",
+      status: "pending" as const,
       ...(paymentUrl ? {} : { message: "Account created. Payment link not configured; contact support to complete." }),
-    },
-  };
+    });
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Failed to create account");
+  }
 }
 
 export interface HandleIPNResult {
@@ -90,16 +94,30 @@ export async function markAccountPaid(
   twocoOrderId?: string,
   twocoCustomerId?: string
 ): Promise<Result<HandleIPNResult, string>> {
-  const result = await prisma.account.updateMany({
-    where: { id: accountId },
-    data: {
-      status: "active",
-      twocoOrderId: twocoOrderId ?? undefined,
-      twocoCustomerId: twocoCustomerId ?? undefined,
-    },
-  });
-  return ok({
-    updated: (result.count ?? 0) > 0,
-    accountId,
-  });
+  try {
+    const result = await prisma.account.updateMany({
+      where: { id: accountId },
+      data: {
+        status: "active",
+        twocoOrderId: twocoOrderId ?? undefined,
+        twocoCustomerId: twocoCustomerId ?? undefined,
+      },
+    });
+    const updated = (result.count ?? 0) > 0;
+    if (updated) {
+      // Send activation email (fire-and-forget — don't fail if email fails)
+      const account = await prisma.account.findUnique({ where: { id: accountId } }).catch(() => null);
+      if (account) {
+        const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/login`;
+        void sendEmail({
+          to: account.email,
+          subject: "Your Westbridge account is now active",
+          html: accountActivatedEmail({ companyName: account.companyName, plan: account.plan, loginUrl }),
+        });
+      }
+    }
+    return ok({ updated, accountId });
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Failed to mark account as paid");
+  }
 }

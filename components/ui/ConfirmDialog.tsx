@@ -29,7 +29,7 @@ export function ConfirmDialog({
   return (
     <Modal open={open} onClose={onClose} title={title}>
       <div className="space-y-6">
-        <p className="text-body" style={{ color: "var(--color-ink-secondary)" }}>
+        <p className="text-base text-muted-foreground">
           {description}
         </p>
         <div className="flex justify-end gap-3">
@@ -37,7 +37,7 @@ export function ConfirmDialog({
             {cancelLabel}
           </Button>
           <Button
-            variant={confirmVariant}
+            variant={confirmVariant === "danger" ? "destructive" : "default"}
             size="md"
             onClick={onConfirm}
             loading={loading}

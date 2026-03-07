@@ -19,6 +19,31 @@ export const RATE_LIMIT = {
   WEBHOOK_2CO_PER_MINUTE: 100,
 } as const;
 
+/** Per-plan rate limit tiers. Values are max requests per windowMs. */
+export const RATE_LIMIT_TIERS = {
+  anonymous:    { requests: 20,   windowMs: 60_000 },
+  starter:      { requests: 60,   windowMs: 60_000 },
+  professional: { requests: 200,  windowMs: 60_000 },
+  enterprise:   { requests: 1000, windowMs: 60_000 },
+  api_key:      { requests: 500,  windowMs: 60_000 },
+} as const;
+
+export type RateLimitTier = keyof typeof RATE_LIMIT_TIERS;
+
+/**
+ * Cost multipliers for expensive operations.
+ * A request that costs 5x counts as 5 tokens against the rate limit.
+ */
+export const RATE_LIMIT_COST = {
+  erp_list:   5,  // listing all docs is DB + ERP overhead
+  erp_doc:    2,  // single doc fetch is cheaper
+  erp_create: 3,  // write to ERP is expensive
+  ai_chat:    10, // LLM calls are expensive and slow
+  default:    1,
+} as const;
+
+export type RateLimitOperation = keyof typeof RATE_LIMIT_COST;
+
 export const COOKIE = {
   SESSION_MAX_AGE_SEC: 60 * 60 * 24 * 7, // 7 days
   CSRF_NAME: "westbridge_csrf",
@@ -34,14 +59,11 @@ export const PAGINATION = {
 
 /** Caribbean / Guyana defaults */
 export const LOCALE = {
-  DEFAULT_CURRENCY: "GYD" as const,
+  DEFAULT_CURRENCY: "USD" as const,
   DEFAULT_TIMEZONE: "America/Guyana",
   DATE_FORMAT: "DD/MM/YYYY",
   VAT_RATE_GUYANA: 0.14, // 14%
 } as const;
 
-export const CURRENCY_CODES = ["GYD", "USD", "TTD", "BBD", "XCD", "JMD"] as const;
+export const CURRENCY_CODES = ["USD", "EUR", "GBP", "CAD"] as const;
 export type CurrencyCode = (typeof CURRENCY_CODES)[number];
-
-/** Display conversion rate for pricing (e.g. 1 USD = 210 GYD). Update from API in production. */
-export const DISPLAY_RATE_USD_TO_GYD = 210;

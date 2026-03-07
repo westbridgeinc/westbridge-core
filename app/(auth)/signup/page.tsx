@@ -8,15 +8,14 @@ import { MODULES as MODULE_LIST, PLANS, CATEGORIES, getPlan, isModuleIncludedInP
 import { CARIBBEAN_COUNTRIES, INDUSTRIES } from "@/lib/demo-data";
 import { ROUTES, SITE } from "@/lib/config/site";
 import type { PlanId } from "@/lib/modules";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
+import { validatePassword } from "@/lib/password-policy";
 
-const PASSWORD_REQUIREMENTS = [
-  { label: "At least 8 characters", test: (p: string) => p.length >= 8 },
-  { label: "One uppercase letter", test: (p: string) => /[A-Z]/.test(p) },
-  { label: "One number", test: (p: string) => /\d/.test(p) },
-];
+const TOTAL_PW_REQUIREMENTS = 6;
 
 function SignupContent() {
   const searchParams = useSearchParams();
@@ -27,7 +26,7 @@ function SignupContent() {
   const [industry, setIndustry] = useState("");
   const [country, setCountry] = useState("United States");
   const [employees, setEmployees] = useState(5);
-  const [planId, setPlanId] = useState<PlanId>("professional");
+  const [planId, setPlanId] = useState<PlanId>("starter");
   const [addOnIds, setAddOnIds] = useState<Set<string>>(new Set());
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -37,7 +36,7 @@ function SignupContent() {
   const [csrfToken, setCsrfToken] = useState<string | null>(null);
   const [step1Errors, setStep1Errors] = useState<{ company?: string; industry?: string }>({});
   const [emailTouched, setEmailTouched] = useState(false);
-  const [emailValid, setEmailValid] = useState(false);
+  const [, setEmailValid] = useState(false);
 
   const validateEmail = useCallback((value: string) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -72,10 +71,7 @@ function SignupContent() {
   }, [stepFromUrl]);
 
   const plan = getPlan(planId);
-  const userCount = Math.min(Math.max(employees, 1), plan.maxUsers === -1 ? 100 : plan.maxUsers);
-  const baseMonthly = plan.pricePerUserPerMonth * userCount;
-  const addOnMonthly = MODULE_LIST.filter((m) => addOnIds.has(m.id)).reduce((s, m) => s + m.addOnPricePerMonth, 0);
-  const totalMonthly = baseMonthly + addOnMonthly;
+  const addOnCount = addOnIds.size;
 
   const toggleAddOn = (id: string) => {
     if (isModuleIncludedInPlan(id, planId)) return;
@@ -88,13 +84,13 @@ function SignupContent() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--color-ground)" }}>
-      <nav className="border-b" style={{ borderColor: "var(--color-border)", background: "var(--color-ground)" }}>
+    <div className="min-h-screen bg-background">
+      <nav className="border-b border-border bg-background">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link href={ROUTES.home} className="flex shrink-0 items-center">
             <Image src={SITE.logoPath} alt={`${SITE.name} ${SITE.legal}`} width={140} height={42} priority sizes="140px" className="h-9 w-auto object-contain" />
           </Link>
-          <Link href={ROUTES.login} className="text-sm" style={{ color: "var(--color-ink-secondary)" }}>Sign in</Link>
+          <Link href={ROUTES.login} className="text-sm text-muted-foreground">Sign in</Link>
         </div>
       </nav>
 
@@ -103,15 +99,14 @@ function SignupContent() {
           {[1, 2, 3, 4].map((s) => (
             <div
               key={s}
-              className="h-2 w-12 rounded-full"
-              style={{ background: step >= s ? "var(--color-primary)" : "var(--color-border)" }}
+              className={`h-2 w-12 rounded-full ${step >= s ? "bg-primary" : "bg-border"}`}
             />
           ))}
         </div>
 
         {step === 1 && (
           <div>
-            <h1 className="text-2xl font-semibold" style={{ color: "var(--color-ink)" }}>Tell us about your business</h1>
+            <h1 className="text-2xl font-semibold text-foreground">Tell us about your business</h1>
             <form
               className="mt-8 space-y-4"
               onSubmit={(e) => {
@@ -123,16 +118,21 @@ function SignupContent() {
                 if (Object.keys(err).length === 0) setStep(2);
               }}
             >
-              <Input
-                label="Company name"
-                value={company}
-                onChange={(e) => {
-                  setCompany(e.target.value);
-                  if (step1Errors.company) setStep1Errors((p) => ({ ...p, company: undefined }));
-                }}
-                placeholder="e.g. Acme Industries Inc."
-                error={step1Errors.company}
-              />
+              <div className="space-y-2">
+                <Label htmlFor="signup-company">Company name</Label>
+                <Input
+                  id="signup-company"
+                  value={company}
+                  onChange={(e) => {
+                    setCompany(e.target.value);
+                    if (step1Errors.company) setStep1Errors((p) => ({ ...p, company: undefined }));
+                  }}
+                  placeholder="e.g. Acme Industries Inc."
+                />
+                {step1Errors.company && (
+                  <p className="text-sm text-destructive" role="alert">{step1Errors.company}</p>
+                )}
+              </div>
               <Select
                 label="Industry"
                 value={industry}
@@ -161,10 +161,10 @@ function SignupContent() {
                 }))}
               />
               <Button
-                variant="primary"
-                size="md"
+                variant="default"
+                size="lg"
                 type="submit"
-                className="mt-6 w-full"
+                className="mt-6 h-11 w-full rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={!company.trim() || !industry}
               >
                 Continue
@@ -175,32 +175,32 @@ function SignupContent() {
 
         {step === 2 && (
           <div>
-            <h1 className="text-2xl font-semibold" style={{ color: "var(--color-ink)" }}>Choose your plan</h1>
-            <p className="mt-2 text-sm" style={{ color: "var(--color-ink-tertiary)" }}>Recommended for {employees} employees: {employees <= 5 ? "Starter" : employees <= 25 ? "Growth" : "Enterprise"}.</p>
+            <h1 className="text-2xl font-semibold text-foreground">Choose your plan</h1>
+            <p className="mt-2 text-sm text-muted-foreground/60">Flat monthly pricing. No per-user fees. Scale with overage billing.</p>
             <div className="mt-6 space-y-3">
               {PLANS.map((p) => (
                 <button
                   key={p.id}
                   type="button"
                   onClick={() => setPlanId(p.id)}
-                  className={`w-full min-h-[44px] rounded-xl border-2 p-4 text-left transition ${
-                    planId === p.id ? "border-[var(--color-primary)] bg-[var(--color-ground-section)]" : "hover:opacity-90"
-                  }`}
-                  style={planId === p.id ? undefined : { borderColor: "var(--color-border)" }}
+                  className={cn(
+                    "w-full min-h-[44px] rounded-xl border-2 p-4 text-left transition",
+                    planId === p.id ? "border-primary bg-muted" : "border-border hover:opacity-90"
+                  )}
                 >
                   <div className="flex justify-between">
-                    <span className="font-semibold" style={{ color: "var(--color-ink)" }}>{p.name}</span>
-                    <span style={{ color: "var(--color-ink)" }}>${p.pricePerUserPerMonth}/user/mo</span>
+                    <span className="font-semibold text-foreground">{p.name}</span>
+                    <span className="text-foreground">${p.pricePerMonth.toLocaleString()}/mo</span>
                   </div>
-                  <p className="mt-1 text-sm" style={{ color: "var(--color-ink-tertiary)" }}>{p.maxUsers === -1 ? "Unlimited users" : `Up to ${p.maxUsers} users`} · {p.storageGB === -1 ? "Unlimited storage" : `${p.storageGB} GB`}</p>
+                  <p className="mt-1 text-sm text-muted-foreground/60">{p.limits.users === -1 ? "Unlimited users" : `Up to ${p.limits.users} users`} · {p.limits.storageGB === -1 ? "Unlimited storage" : `${p.limits.storageGB} GB`}</p>
                 </button>
               ))}
             </div>
             <div className="mt-6 flex gap-3">
-              <Button variant="secondary" size="md" type="button" onClick={() => setStep(1)}>
+              <Button variant="secondary" size="default" type="button" onClick={() => setStep(1)}>
                 Back
               </Button>
-              <Button variant="primary" size="md" type="button" onClick={() => setStep(3)}>
+              <Button variant="default" size="lg" type="button" className="h-11 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => setStep(3)}>
                 Continue
               </Button>
             </div>
@@ -209,15 +209,15 @@ function SignupContent() {
 
         {step === 3 && (
           <div>
-            <h1 className="text-2xl font-semibold" style={{ color: "var(--color-ink)" }}>Pick modules</h1>
-            <p className="mt-2 text-sm" style={{ color: "var(--color-ink-tertiary)" }}>Included in {plan.name}. Add more below if needed.</p>
+            <h1 className="text-2xl font-semibold text-foreground">Pick modules</h1>
+            <p className="mt-2 text-sm text-muted-foreground/60">Included in {plan.name}. Add more below if needed.</p>
             <div className="mt-6 max-h-[60vh] overflow-y-auto pr-2 md:max-h-80">
               {CATEGORIES.map((cat) => {
                 const catModules = MODULE_LIST.filter((m) => m.category === cat);
                 if (catModules.length === 0) return null;
                 return (
                   <div key={cat} className="mb-4">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-ink-tertiary)" }}>{cat}</p>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">{cat}</p>
                     <div className="space-y-2">
                       {catModules.map((m) => {
                         const included = isModuleIncludedInPlan(m.id, planId);
@@ -228,22 +228,15 @@ function SignupContent() {
                             type="button"
                             onClick={() => !included && toggleAddOn(m.id)}
                             disabled={included}
-                            className={`w-full min-h-[44px] rounded-lg border p-3 text-left text-sm transition flex justify-between items-center ${
-                              included ? "cursor-default opacity-90" : isAddOn ? "border-[var(--color-primary)] bg-[var(--color-ground-section)]" : "hover:opacity-90"
+                            className={`flex min-h-[44px] w-full justify-between items-center rounded-lg border p-3 text-left text-sm transition ${
+                              included ? "cursor-default border-border bg-muted opacity-90" : isAddOn ? "border-primary bg-muted" : "border-border hover:opacity-90"
                             }`}
-                            style={
-                              included
-                                ? { borderColor: "var(--color-border)", background: "var(--color-ground-section)" }
-                                : isAddOn
-                                ? undefined
-                                : { borderColor: "var(--color-border)" }
-                            }
                           >
-                            <span className="font-medium" style={{ color: "var(--color-ink)" }}>{m.name}</span>
+                            <span className="font-medium text-foreground">{m.name}</span>
                             {included ? (
-                              <span className="text-xs" style={{ color: "var(--color-ink-tertiary)" }}>Included</span>
+                              <span className="text-xs text-muted-foreground/60">Included</span>
                             ) : (
-                              <span style={{ color: "var(--color-ink-secondary)" }}>+${m.addOnPricePerMonth}/mo</span>
+                              <span className="text-muted-foreground">Add-on</span>
                             )}
                           </button>
                         );
@@ -253,15 +246,15 @@ function SignupContent() {
                 );
               })}
             </div>
-            <div className="mt-6 rounded-lg border p-4" style={{ borderColor: "var(--color-border)", background: "var(--color-ground-section)" }}>
-              <p className="text-sm font-medium" style={{ color: "var(--color-ink)" }}>Total: ${totalMonthly.toFixed(0)}/mo</p>
-              <p className="text-xs mt-0.5" style={{ color: "var(--color-ink-tertiary)" }}>{userCount} users × ${plan.pricePerUserPerMonth} + {addOnIds.size} add-ons</p>
+            <div className="mt-6 rounded-lg border border-border bg-muted p-4">
+              <p className="text-sm font-medium text-foreground">{plan.name} — ${plan.pricePerMonth.toLocaleString()}/mo</p>
+              <p className="mt-0.5 text-xs text-muted-foreground/60">Flat monthly pricing · {addOnCount} add-on{addOnCount !== 1 ? "s" : ""} selected</p>
             </div>
             <div className="mt-6 flex gap-3">
-              <Button variant="secondary" size="md" type="button" onClick={() => setStep(2)}>
+              <Button variant="secondary" size="default" type="button" onClick={() => setStep(2)}>
                 Back
               </Button>
-              <Button variant="primary" size="md" type="button" onClick={() => setStep(4)}>
+              <Button variant="default" size="lg" type="button" className="h-11 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => setStep(4)}>
                 Continue
               </Button>
             </div>
@@ -272,21 +265,20 @@ function SignupContent() {
           <div>
             {returnFromPayment ? (
               <>
-                <h1 className="text-2xl font-semibold" style={{ color: "var(--color-ink)" }}>Payment submitted</h1>
-                <p className="mt-2" style={{ color: "var(--color-ink-secondary)" }}>
+                <h1 className="text-2xl font-semibold text-foreground">Payment submitted</h1>
+                <p className="mt-2 text-muted-foreground">
                   Your payment is being processed. We&apos;ll activate your account shortly and email you at <strong>{email || "your email"}</strong>.
                 </p>
                 <Link
                   href={ROUTES.login}
-                  className="mt-6 inline-block rounded-md px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
-                  style={{ background: "var(--color-primary)" }}
+                  className="mt-6 inline-block rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
                 >
                   Go to sign in
                 </Link>
               </>
             ) : (
               <>
-                <h1 className="text-2xl font-semibold" style={{ color: "var(--color-ink)" }}>Create your account</h1>
+                <h1 className="text-2xl font-semibold text-foreground">Create your account</h1>
                 <form
                   className="mt-8 space-y-4"
                   onSubmit={async (e) => {
@@ -308,7 +300,7 @@ function SignupContent() {
                           email,
                           companyName: company,
                           plan: plan.name,
-                          modulesSelected: [...plan.includedModuleIds, ...addOnIds],
+                          modulesSelected: [...plan.includedBundleIds, ...addOnIds],
                         }),
                       });
                       const data = await res.json().catch(() => ({}));
@@ -335,78 +327,95 @@ function SignupContent() {
                     }
                   }}
                 >
-                  <Input
-                    label="Full name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                  <Input
-                    label="Email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setEmailValid(validateEmail(e.target.value));
-                    }}
-                    onBlur={() => {
-                      setEmailTouched(true);
-                      setEmailValid(validateEmail(email));
-                    }}
-                    error={emailTouched && email.trim() && !validateEmail(email) ? "Enter a valid email address" : undefined}
-                  />
-                  <div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name">Full name</Label>
                     <Input
-                      label="Password"
+                      id="signup-name"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setEmailValid(validateEmail(e.target.value));
+                      }}
+                      onBlur={() => {
+                        setEmailTouched(true);
+                        setEmailValid(validateEmail(email));
+                      }}
+                    />
+                    {emailTouched && email.trim() && !validateEmail(email) && (
+                      <p className="text-sm text-destructive" role="alert">Enter a valid email address</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input
+                      id="signup-password"
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
-                    <ul className="mt-2 space-y-1 text-xs" style={{ color: "var(--color-ink-tertiary)" }}>
-                      {PASSWORD_REQUIREMENTS.map((r) => (
-                        <li key={r.label} style={r.test(password) ? { color: "var(--color-success)" } : undefined}>
-                          {r.test(password) ? "\u2713" : "\u25CB"} {r.label}
-                        </li>
-                      ))}
-                    </ul>
-                    {password.length > 0 && (
-                      <div className="mt-2 flex gap-1">
-                        {[0, 1, 2].map((i) => {
-                          const passed = PASSWORD_REQUIREMENTS.filter((r) => r.test(password)).length;
-                          return (
-                            <div
-                              key={i}
-                              className="h-1.5 flex-1 rounded-full transition-colors"
-                              style={{
-                                background: i < passed
-                                  ? passed === 3 ? "var(--color-success)" : passed >= 2 ? "var(--color-accent-gold)" : "var(--color-error)"
-                                  : "var(--color-border)",
-                              }}
-                            />
-                          );
-                        })}
-                      </div>
-                    )}
+                    {password.length > 0 && (() => {
+                      const pwResult = validatePassword(password);
+                      const passed = TOTAL_PW_REQUIREMENTS - pwResult.errors.length;
+                      return (
+                        <>
+                          <ul className="mt-2 space-y-1 text-xs">
+                            {pwResult.errors.length === 0 ? (
+                              <li className="text-emerald-500">\u2713 Password meets all requirements</li>
+                            ) : (
+                              pwResult.errors.map((e) => (
+                                <li key={e} className="text-destructive">\u2717 {e}</li>
+                              ))
+                            )}
+                          </ul>
+                          <div className="mt-2 flex gap-1">
+                            {Array.from({ length: TOTAL_PW_REQUIREMENTS }).map((_, i) => (
+                              <div
+                                key={i}
+                                className={`h-1.5 flex-1 rounded-full transition-colors ${
+                                  i < passed
+                                    ? passed === TOTAL_PW_REQUIREMENTS
+                                      ? "bg-emerald-500"
+                                      : passed >= 4
+                                        ? "bg-amber-400"
+                                        : "bg-destructive"
+                                    : "bg-border"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
-                  {signupError && <p className="text-sm" style={{ color: "var(--color-error)" }}>{signupError}</p>}
+                  {signupError && <p className="text-sm text-destructive">{signupError}</p>}
                   <Button
-                    variant="primary"
-                    size="md"
+                    variant="default"
+                    size="lg"
                     type="submit"
                     disabled={
                       submitting ||
                       !csrfToken ||
                       !validateEmail(email) ||
-                      !PASSWORD_REQUIREMENTS.every((r) => r.test(password))
+                      !validatePassword(password).valid
                     }
-                    className="mt-6 w-full"
+                    className="mt-6 h-11 w-full rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {!csrfToken ? "Loading\u2026" : submitting ? "Setting up your workspace\u2026" : "Continue to payment (2Checkout)"}
                   </Button>
-                  <p className="mt-2 text-center text-xs" style={{ color: "var(--color-ink-muted)" }}>You&apos;ll complete payment securely via 2Checkout. Cards and local payment methods supported.</p>
+                  <p className="mt-2 text-center text-xs text-muted-foreground/40">You&apos;ll complete payment securely via 2Checkout. Cards and local payment methods supported.</p>
                 </form>
-                <button type="button" onClick={() => setStep(3)} className="mt-4 text-sm hover:opacity-100" style={{ color: "var(--color-ink-tertiary)" }}>
+                <button type="button" onClick={() => setStep(3)} className="mt-4 text-sm text-muted-foreground/60 hover:opacity-100">
                   Back
                 </button>
               </>
@@ -420,7 +429,7 @@ function SignupContent() {
 
 export default function SignupPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{ background: "var(--color-ground)", color: "var(--color-ink-tertiary)" }}>Loading&hellip;</div>}>
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground/60">Loading&hellip;</div>}>
       <SignupContent />
     </Suspense>
   );

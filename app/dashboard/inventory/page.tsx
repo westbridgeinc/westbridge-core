@@ -3,14 +3,15 @@
 import { useState, useEffect, useMemo } from "react";
 import { Package } from "lucide-react";
 import { MODULE_EMPTY_STATES, EMPTY_STATE_SUPPORT_LINE } from "@/lib/dashboard/empty-state-config";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { MetricCard } from "@/components/dashboard/MetricCard";
+import { Card, CardContent } from "@/components/ui/Card";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { SkeletonTable } from "@/components/ui/SkeletonTable";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatCurrency } from "@/lib/locale/currency";
+import { AIChatPanel } from "@/components/ai/AIChatPanel";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -79,9 +80,7 @@ const columns: Column<InventoryItem>[] = [
     id: "item",
     header: "Item",
     accessor: (row) => (
-      <span className="font-medium" style={{ color: "var(--color-ink)" }}>
-        {row.item}
-      </span>
+      <span className="font-medium text-foreground">{row.item}</span>
     ),
     sortValue: (row) => row.item,
   },
@@ -89,7 +88,7 @@ const columns: Column<InventoryItem>[] = [
     id: "warehouse",
     header: "Warehouse",
     accessor: (row) => (
-      <span style={{ color: "var(--color-ink-secondary)" }}>{row.warehouse}</span>
+      <span className="text-muted-foreground">{row.warehouse}</span>
     ),
     sortValue: (row) => row.warehouse,
   },
@@ -98,7 +97,7 @@ const columns: Column<InventoryItem>[] = [
     header: "Qty",
     align: "right",
     accessor: (row) => (
-      <span style={{ color: "var(--color-ink-secondary)" }}>
+      <span className="text-muted-foreground">
         {row.qty.toLocaleString()}
       </span>
     ),
@@ -109,7 +108,7 @@ const columns: Column<InventoryItem>[] = [
     header: "Value",
     align: "right",
     accessor: (row) => (
-      <span className="font-medium" style={{ color: "var(--color-ink)" }}>
+      <span className="font-medium text-foreground">
         {formatCurrency(row.value)}
       </span>
     ),
@@ -119,7 +118,7 @@ const columns: Column<InventoryItem>[] = [
     id: "uom",
     header: "UOM",
     accessor: (row) => (
-      <span style={{ color: "var(--color-ink-tertiary)" }}>{row.uom}</span>
+      <span className="text-muted-foreground/60">{row.uom}</span>
     ),
     sortValue: (row) => row.uom,
   },
@@ -168,25 +167,27 @@ export default function InventoryPage() {
 
   const stats = useMemo(() => deriveStats(items), [items]);
 
+  const header = (
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Inventory</h1>
+        <p className="text-sm text-muted-foreground">Stock levels and warehouse management</p>
+      </div>
+      <Button variant="primary">+ Create New</Button>
+    </div>
+  );
+
   /* ---- Error state ---- */
   if (error) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Inventory" description="Stock levels and warehouse management" />
-        <div
-          className="flex flex-col items-center gap-4 rounded-[var(--radius-md)] border px-6 py-16 text-center"
-          style={{
-            borderColor: "var(--color-border)",
-            background: "var(--color-ground-elevated)",
-          }}
-        >
-          <p className="text-body" style={{ color: "var(--color-ink-secondary)" }}>
-            {error}
-          </p>
-          <Button variant="secondary" size="sm" onClick={fetchInventory}>
-            Retry
-          </Button>
-        </div>
+        {header}
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+            <p className="text-sm text-muted-foreground">{error}</p>
+            <Button variant="outline" size="sm" onClick={fetchInventory}>Retry</Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -195,17 +196,17 @@ export default function InventoryPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Inventory" description="Stock levels and warehouse management" />
+        {header}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="card animate-pulse"
-              style={{ minHeight: 88 }}
-            />
+            <div key={i} className="min-h-[88px] rounded-xl border border-border bg-card p-6 animate-pulse" />
           ))}
         </div>
-        <SkeletonTable rows={8} columns={6} />
+        <Card>
+          <CardContent className="p-0">
+            <SkeletonTable rows={8} columns={6} />
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -213,26 +214,16 @@ export default function InventoryPage() {
   /* ---- Success / Empty states ---- */
   return (
     <div className="space-y-6">
-      <PageHeader title="Inventory" description="Stock levels and warehouse management" />
-
-      {/* Metric cards */}
+      {header}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <MetricCard label="Total Items" value={stats.totalItems} />
-        <MetricCard
-          label="Low Stock"
-          value={stats.lowStock}
-          subtextVariant={stats.lowStock > 0 ? "error" : "muted"}
-        />
-        <MetricCard
-          label="Out of Stock"
-          value={stats.outOfStock}
-          subtextVariant={stats.outOfStock > 0 ? "error" : "muted"}
-        />
+        <MetricCard label="Low Stock" value={stats.lowStock} subtextVariant={stats.lowStock > 0 ? "error" : "muted"} />
+        <MetricCard label="Out of Stock" value={stats.outOfStock} subtextVariant={stats.outOfStock > 0 ? "error" : "muted"} />
         <MetricCard label="Total Value" value={formatCurrency(stats.totalValue)} />
       </div>
-
-      {/* Data table */}
-      <DataTable<InventoryItem>
+      <Card>
+        <CardContent className="p-0">
+          <DataTable<InventoryItem>
         columns={columns}
         data={items}
         keyExtractor={(r) => r.id}
@@ -248,7 +239,10 @@ export default function InventoryPage() {
           />
         }
         pageSize={20}
-      />
+          />
+        </CardContent>
+      </Card>
+      <AIChatPanel module="inventory" />
     </div>
   );
 }

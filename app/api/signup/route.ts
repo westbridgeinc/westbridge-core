@@ -1,22 +1,49 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { checkRateLimit, getClientIdentifier } from "@/lib/ratelimit";
+import { checkTieredRateLimit, getClientIdentifier, rateLimitHeaders } from "@/lib/api/rate-limit-tiers";
 import { createAccount } from "@/lib/services/billing.service";
-import { logAction } from "@/lib/services/audit.service";
+import { logAudit, auditContext } from "@/lib/services/audit.service";
 import { apiSuccess, apiError, apiMeta, getRequestId } from "@/types/api";
 import { signupBodySchema } from "@/types/schemas/signup";
 import { validateCsrf, CSRF_COOKIE_NAME } from "@/lib/csrf";
-import { RATE_LIMIT } from "@/lib/constants";
+import { securityHeaders } from "@/lib/security-headers";
+import * as Sentry from "@sentry/nextjs";
+
+const MAX_BODY_BYTES = 1_048_576;
 
 export async function POST(request: Request) {
+  const start = Date.now();
   const requestId = getRequestId(request);
   const meta = () => apiMeta({ request_id: requestId });
+  const headers = () => ({ ...securityHeaders(), "X-Response-Time": `${Date.now() - start}ms` });
+
+  try {
+  const contentLength = parseInt(request.headers.get("content-length") ?? "0", 10);
+  if (contentLength > MAX_BODY_BYTES) {
+    return NextResponse.json(
+      apiError("PAYLOAD_TOO_LARGE", "Request body exceeds 1MB limit", undefined, meta()),
+      { status: 413, headers: headers() }
+    );
+  }
+
+  const ctx = auditContext(request);
   const id = getClientIdentifier(request);
-  const { allowed } = await checkRateLimit(`signup:${id}`, RATE_LIMIT.SIGNUP_PER_MINUTE);
-  if (!allowed) {
+  const rateLimit = await checkTieredRateLimit(id, "anonymous", "/api/signup");
+  if (!rateLimit.allowed) {
+    const systemAccountId = process.env.SYSTEM_ACCOUNT_ID;
+    if (systemAccountId) {
+      void logAudit({
+        accountId: systemAccountId,
+        action: "account.signup.rate_limited",
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+        severity: "warn",
+        outcome: "failure",
+      });
+    }
     return NextResponse.json(
       apiError("RATE_LIMIT", "Too many signup attempts. Try again in a minute.", undefined, meta()),
-      { status: 429 }
+      { status: 429, headers: { ...headers(), ...rateLimitHeaders(rateLimit) } }
     );
   }
 
@@ -26,7 +53,7 @@ export async function POST(request: Request) {
   if (!validateCsrf(csrfHeader, csrfCookie)) {
     return NextResponse.json(
       apiError("FORBIDDEN", "Invalid or missing CSRF token.", undefined, meta()),
-      { status: 403 }
+      { status: 403, headers: headers() }
     );
   }
 
@@ -36,7 +63,7 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json(
       apiError("INVALID_JSON", "Invalid request body", undefined, meta()),
-      { status: 400 }
+      { status: 400, headers: headers() }
     );
   }
 
@@ -46,7 +73,7 @@ export async function POST(request: Request) {
     const message = first.email?.[0] ?? first.companyName?.[0] ?? first.plan?.[0] ?? "Invalid request";
     return NextResponse.json(
       apiError("VALIDATION_ERROR", message, undefined, meta()),
-      { status: 400 }
+      { status: 400, headers: headers() }
     );
   }
 
@@ -60,18 +87,40 @@ export async function POST(request: Request) {
       : 500;
     const { logger } = await import("@/lib/logger");
     if (status === 500) logger.error("Signup API error", { error: result.error, request_id: requestId });
+    const systemAccountId = process.env.SYSTEM_ACCOUNT_ID;
+    if (systemAccountId) {
+      void logAudit({
+        accountId: systemAccountId,
+        action: "account.signup.failure",
+        metadata: { reason: result.error },
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+        severity: "warn",
+        outcome: "failure",
+      });
+    }
     return NextResponse.json(
       apiError("SIGNUP_FAILED", result.error, undefined, meta()),
-      { status }
+      { status, headers: headers() }
     );
   }
 
-  void logAction({
+  void logAudit({
     accountId: result.data.accountId,
-    action: "signup",
+    action: "account.created",
     metadata: { email: parsed.data.email, plan: parsed.data.plan },
-    ipAddress: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? undefined,
+    ipAddress: ctx.ipAddress,
+    userAgent: ctx.userAgent,
+    severity: "info",
+    outcome: "success",
   });
 
-  return NextResponse.json(apiSuccess(result.data, meta()));
+  return NextResponse.json(apiSuccess(result.data, meta()), { headers: headers() });
+  } catch (error) {
+    Sentry.captureException(error, { extra: { request_id: requestId } });
+    return NextResponse.json(
+      apiError("SERVER_ERROR", "An unexpected error occurred", undefined, meta()),
+      { status: 500, headers: headers() }
+    );
+  }
 }

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonTable } from "@/components/ui/SkeletonTable";
@@ -11,6 +11,7 @@ import { MODULE_EMPTY_STATES, EMPTY_STATE_SUPPORT_LINE } from "@/lib/dashboard/e
 import { formatCurrency } from "@/lib/locale/currency";
 import { FileBarChart } from "lucide-react";
 import { formatDateLong } from "@/lib/locale/date";
+import { AIChatPanel } from "@/components/ai/AIChatPanel";
 
 interface QuotationRow {
   id: string;
@@ -26,10 +27,10 @@ function fmtDate(d: string): string {
 }
 
 const columns: Column<QuotationRow>[] = [
-  { id: "id", header: "Quote #", accessor: (r) => <span className="font-medium" style={{ color: "var(--color-ink)" }}>{r.id}</span>, sortValue: (r) => r.id },
-  { id: "customer", header: "Customer", accessor: (r) => <span style={{ color: "var(--color-ink-secondary)" }}>{r.customer}</span>, sortValue: (r) => r.customer },
-  { id: "amount", header: "Amount", align: "right", accessor: (r) => <span className="font-medium" style={{ color: "var(--color-ink)" }}>{formatCurrency(r.amount, "GYD")}</span>, sortValue: (r) => r.amount },
-  { id: "validUntil", header: "Valid Until", accessor: (r) => <span style={{ color: "var(--color-ink-tertiary)" }}>{fmtDate(r.validUntil)}</span>, sortValue: (r) => r.validUntil },
+  { id: "id", header: "Quote #", accessor: (r) => <span className="font-medium text-foreground">{r.id}</span>, sortValue: (r) => r.id },
+  { id: "customer", header: "Customer", accessor: (r) => <span className="text-muted-foreground">{r.customer}</span>, sortValue: (r) => r.customer },
+  { id: "amount", header: "Amount", align: "right", accessor: (r) => <span className="font-medium text-foreground">{formatCurrency(r.amount, "USD")}</span>, sortValue: (r) => r.amount },
+  { id: "validUntil", header: "Valid Until", accessor: (r) => <span className="text-muted-foreground/60">{fmtDate(r.validUntil)}</span>, sortValue: (r) => r.validUntil },
   { id: "status", header: "Status", accessor: (r) => <Badge status={r.status}>{r.status}</Badge> },
 ];
 
@@ -54,43 +55,58 @@ export default function QuotationsPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const action = <Button variant="primary" size="md">New Quote</Button>;
-
   if (error) {
     return (
-      <div>
-        <PageHeader title="Quotations" description="Sales quotations and proposals" action={action} />
-        <div className="mt-8 flex flex-col items-center rounded-[var(--radius-md)] border p-12" style={{ borderColor: "var(--color-border)", background: "var(--color-ground-elevated)" }}>
-          <p style={{ color: "var(--color-error)" }}>{error}</p>
-          <Button variant="secondary" size="sm" onClick={load} className="mt-4">Retry</Button>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Quotations</h1>
+            <p className="text-sm text-muted-foreground">Sales quotations and proposals</p>
+          </div>
+          <Button variant="primary">+ Create New</Button>
         </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <p className="text-destructive">{error}</p>
+            <Button variant="outline" size="sm" onClick={load} className="mt-4">Retry</Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div>
-      <PageHeader title="Quotations" description="Sales quotations and proposals" action={action} />
-      <div className="mt-8">
-        {loading ? <SkeletonTable rows={6} columns={5} /> : (
-          <DataTable
-            columns={columns}
-            data={data}
-            keyExtractor={(r) => r.id}
-            emptyState={
-              <EmptyState
-                icon={<FileBarChart className="h-6 w-6" />}
-                title={MODULE_EMPTY_STATES.quotations.title}
-                description={MODULE_EMPTY_STATES.quotations.description}
-                actionLabel={MODULE_EMPTY_STATES.quotations.actionLabel}
-                actionHref={MODULE_EMPTY_STATES.quotations.actionLink}
-                supportLine={EMPTY_STATE_SUPPORT_LINE}
-              />
-            }
-            pageSize={20}
-          />
-        )}
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Quotations</h1>
+          <p className="text-sm text-muted-foreground">Sales quotations and proposals</p>
+        </div>
+        <Button variant="primary">+ Create New</Button>
       </div>
+      <Card>
+        <CardContent className="p-0">
+          {loading ? <SkeletonTable rows={6} columns={5} /> : (
+            <DataTable
+              columns={columns}
+              data={data}
+              keyExtractor={(r) => r.id}
+              emptyState={
+                <EmptyState
+                  icon={<FileBarChart className="h-6 w-6" />}
+                  title={MODULE_EMPTY_STATES.quotations.title}
+                  description={MODULE_EMPTY_STATES.quotations.description}
+                  actionLabel={MODULE_EMPTY_STATES.quotations.actionLabel}
+                  actionHref={MODULE_EMPTY_STATES.quotations.actionLink}
+                  supportLine={EMPTY_STATE_SUPPORT_LINE}
+                />
+              }
+              pageSize={20}
+            />
+          )}
+        </CardContent>
+      </Card>
+      <AIChatPanel module="crm" />
     </div>
   );
 }

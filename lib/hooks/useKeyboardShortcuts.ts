@@ -39,7 +39,7 @@ export function useKeyboardShortcuts({
     (e: KeyboardEvent) => {
       if (!pathname?.startsWith("/dashboard")) return;
       const target = e.target as HTMLElement;
-      if (target.closest("input, textarea, [contenteditable=\"true\"]")) return;
+      if (target?.closest?.("input, textarea, [contenteditable=\"true\"]")) return;
 
       const meta = e.metaKey || e.ctrlKey;
       if (meta && e.key.toLowerCase() === "k") {

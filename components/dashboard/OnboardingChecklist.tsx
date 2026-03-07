@@ -75,7 +75,7 @@ export function OnboardingChecklist({ checklistRef }: { checklistRef?: React.Ref
   }, []);
 
   useEffect(() => {
-    loadState();
+    queueMicrotask(() => loadState());
   }, [loadState]);
 
   const handleDismiss = () => {
@@ -96,14 +96,7 @@ export function OnboardingChecklist({ checklistRef }: { checklistRef?: React.Ref
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-      className="mb-8 rounded-[var(--radius-md)] border p-5"
-      style={{
-        borderColor: "var(--color-border)",
-        background: "var(--color-ground-elevated)",
-        borderLeftWidth: 4,
-        borderLeftColor: "var(--color-accent)",
-        boxShadow: "0 0 0 1px rgba(20, 184, 166, 0.08)",
-      }}
+      className="mb-8 rounded-lg border border-border border-l-4 border-l-primary bg-card p-5 shadow-[0_0_0_1px_rgba(20,184,166,0.08)]"
     >
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-8">
         <div className="flex items-center gap-4">
@@ -114,7 +107,7 @@ export function OnboardingChecklist({ checklistRef }: { checklistRef?: React.Ref
                 cy="22"
                 r="18"
                 fill="none"
-                stroke="var(--color-border)"
+                stroke="hsl(var(--border))"
                 strokeWidth="4"
               />
               <motion.circle
@@ -122,7 +115,7 @@ export function OnboardingChecklist({ checklistRef }: { checklistRef?: React.Ref
                 cy="22"
                 r="18"
                 fill="none"
-                stroke="var(--color-accent)"
+                stroke="hsl(var(--primary))"
                 strokeWidth="4"
                 strokeLinecap="round"
                 strokeDasharray={circumference}
@@ -133,10 +126,10 @@ export function OnboardingChecklist({ checklistRef }: { checklistRef?: React.Ref
             </svg>
           </div>
           <div>
-            <p className="text-h3 font-semibold" style={{ color: "var(--color-ink)" }}>
+            <p className="text-xl font-semibold text-foreground">
               Get started with Westbridge
             </p>
-            <p className="text-body mt-0.5" style={{ color: "var(--color-ink-tertiary)" }}>
+            <p className="mt-0.5 text-base text-muted-foreground/60">
               {completedCount} of {total} complete
             </p>
           </div>
@@ -150,7 +143,7 @@ export function OnboardingChecklist({ checklistRef }: { checklistRef?: React.Ref
                 <Link
                   href={step.href}
                   prefetch={true}
-                  className="group flex items-center justify-between gap-2 rounded-lg py-2.5 pr-2 transition-colors hover:bg-[var(--color-ground-muted)]"
+                  className="group flex items-center justify-between gap-2 rounded-lg py-2.5 pr-2 transition-colors hover:bg-muted"
                 >
                   <span className="flex items-center gap-3">
                     <AnimatePresence mode="wait">
@@ -160,8 +153,7 @@ export function OnboardingChecklist({ checklistRef }: { checklistRef?: React.Ref
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           exit={{ scale: 0 }}
-                          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-                          style={{ background: "var(--color-accent)", color: "var(--color-ground)" }}
+className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
                         >
                           <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
                         </motion.span>
@@ -171,24 +163,18 @@ export function OnboardingChecklist({ checklistRef }: { checklistRef?: React.Ref
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           exit={{ scale: 0 }}
-                          className="h-2 w-2 shrink-0 rounded-full"
-                          style={{ background: "var(--color-ink-tertiary)" }}
+                          className="h-2 w-2 shrink-0 rounded-full bg-muted-foreground/60"
                         />
                       )}
                     </AnimatePresence>
                     <span
-                      className="text-body font-medium"
-                      style={{
-                        color: done ? "var(--color-ink-tertiary)" : "var(--color-ink-secondary)",
-                        textDecoration: done ? "line-through" : undefined,
-                      }}
+                      className={`text-base font-medium ${done ? "text-muted-foreground/60 line-through" : "text-muted-foreground"}`}
                     >
                       {step.label}
                     </span>
                   </span>
                   <ChevronRight
-                    className="h-4 w-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
-                    style={{ color: "var(--color-ink-tertiary)" }}
+                    className="h-4 w-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 text-muted-foreground/60"
                   />
                 </Link>
               </li>
@@ -197,12 +183,11 @@ export function OnboardingChecklist({ checklistRef }: { checklistRef?: React.Ref
         </ul>
       </div>
 
-      <div className="mt-4 pt-4 border-t" style={{ borderColor: "var(--color-border-subtle)" }}>
+      <div className="mt-4 border-t border-border pt-4">
         <button
           type="button"
           onClick={handleDismiss}
-          className="text-caption font-medium transition-opacity hover:opacity-100"
-          style={{ color: "var(--color-ink-tertiary)" }}
+          className="text-sm font-medium text-muted-foreground transition-opacity hover:opacity-100"
         >
           Dismiss
         </button>

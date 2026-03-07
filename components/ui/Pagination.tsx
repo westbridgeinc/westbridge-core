@@ -18,11 +18,8 @@ export function Pagination({ page, perPage, total, onChange, className = "" }: P
   if (total <= 0) return null;
 
   return (
-    <div
-      className={`flex items-center justify-between ${className}`}
-      style={{ color: "var(--color-ink-tertiary)" }}
-    >
-      <span className="text-[var(--font-caption)]">
+    <div className={`flex items-center justify-between text-sm text-muted-foreground/60 ${className}`}>
+      <span className="text-sm">
         {start}–{end} of {total}
       </span>
       <div className="flex items-center gap-1">
@@ -30,19 +27,19 @@ export function Pagination({ page, perPage, total, onChange, className = "" }: P
           type="button"
           disabled={page <= 1}
           onClick={() => onChange(page - 1)}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] transition-colors duration-150 hover:bg-[var(--color-ground-muted)] disabled:opacity-40 disabled:cursor-not-allowed"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background text-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="Previous page"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
-        <span className="px-2 text-[var(--font-caption)] font-medium" style={{ color: "var(--color-ink-secondary)" }}>
+        <span className="px-2 text-sm font-medium text-muted-foreground">
           {page} / {totalPages}
         </span>
         <button
           type="button"
           disabled={page >= totalPages}
           onClick={() => onChange(page + 1)}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] transition-colors duration-150 hover:bg-[var(--color-ground-muted)] disabled:opacity-40 disabled:cursor-not-allowed"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background text-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="Next page"
         >
           <ChevronRight className="h-4 w-4" />

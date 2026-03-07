@@ -251,34 +251,28 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
         onClick={onClose}
         aria-hidden
       />
-      <div
-        className="relative w-full max-w-xl rounded-xl border shadow-2xl"
-        style={{
-          background: "var(--color-ground-elevated)",
-          borderColor: "var(--color-border)",
-        }}
-      >
-        <div className="flex items-center gap-2 border-b px-4 py-3" style={{ borderColor: "var(--color-border)" }}>
-          <span className="text-[var(--color-ink-tertiary)]">⌘K</span>
+      <div className="relative w-full max-w-xl rounded-xl border border-border bg-card shadow-2xl">
+        <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+          <span className="text-muted-foreground/60">⌘K</span>
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search modules and actions…"
-            className="min-w-0 flex-1 bg-transparent text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)] focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent text-foreground placeholder:text-muted-foreground/40 focus:outline-none"
             autoFocus
           />
         </div>
         <div className="max-h-[60vh] overflow-auto py-2">
           {flatEntries.length === 0 && !recordLoading ? (
-            <p className="px-4 py-6 text-center text-body" style={{ color: "var(--color-ink-tertiary)" }}>
+            <p className="px-4 py-6 text-center text-base text-muted-foreground/60">
               {query.trim().length >= 2 ? "No results. Try another search." : "No results. Try another search."}
             </p>
           ) : (
             <>
               {recordLoading && query.trim().length >= 2 && (
-                <p className="px-4 py-2 text-[0.8125rem]" style={{ color: "var(--color-ink-tertiary)" }}>
+                <p className="px-4 py-2 text-[0.8125rem] text-muted-foreground/60">
                   Searching records…
                 </p>
               )}
@@ -286,8 +280,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
               {!query.trim() && recentItems.length > 0 && (
                 <div className="mb-1">
                   <p
-                    className="flex items-center gap-1.5 px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider"
-                    style={{ color: "var(--color-ink-muted)" }}
+                    className="flex items-center gap-1.5 px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/40"
                   >
                     <Clock className="h-3 w-3" />
                     Recent
@@ -302,15 +295,14 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                           e.preventDefault();
                           selectAction(item);
                         }}
-                        className="flex items-center gap-3 px-4 py-2 text-body"
-                        style={{ color: "var(--color-ink-secondary)" }}
+                        className="flex items-center gap-3 px-4 py-2 text-base text-muted-foreground"
                       >
                         <Icon className="h-4 w-4 shrink-0 opacity-50" />
                         <span className="text-[0.8125rem]">{item.label}</span>
                       </Link>
                     );
                   })}
-                  <div className="mx-4 my-1 border-b" style={{ borderColor: "var(--color-border)" }} />
+                  <div className="mx-4 my-1 border-b border-border" />
                 </div>
               )}
 
@@ -323,8 +315,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                 return (
                   <div key={group} className="mb-1">
                     <p
-                      className="flex items-center gap-1.5 px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider"
-                      style={{ color: "var(--color-ink-muted)" }}
+                      className="flex items-center gap-1.5 px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/40"
                     >
                       {group === "Records" && <FileSearch className="h-3 w-3" />}
                       {group}
@@ -343,13 +334,9 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                                   e.preventDefault();
                                   selectRecord(item);
                                 }}
-                                className={`flex items-center gap-3 px-4 py-2.5 text-body ${
-                                  isSelected ? "bg-[var(--color-ground-section)]" : ""
+                                className={`flex items-center gap-3 px-4 py-2.5 text-base ${
+                                  isSelected ? "border-l-4 border-l-primary bg-muted text-foreground" : "border-l-4 border-l-transparent text-muted-foreground"
                                 }`}
-                                style={{
-                                  color: isSelected ? "var(--color-ink)" : "var(--color-ink-secondary)",
-                                  borderLeft: isSelected ? "3px solid var(--color-accent)" : "3px solid transparent",
-                                }}
                               >
                                 <FileSearch className="h-5 w-5 shrink-0 opacity-70" />
                                 <span className="truncate">{item.doctypeLabel}: {item.name}</span>
@@ -367,13 +354,9 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                                 e.preventDefault();
                                 selectAction(item);
                               }}
-                              className={`flex items-center gap-3 px-4 py-2.5 text-body ${
-                                isSelected ? "bg-[var(--color-ground-section)]" : ""
+                              className={`flex items-center gap-3 px-4 py-2.5 text-base ${
+                                isSelected ? "border-l-4 border-l-primary bg-muted text-foreground" : "border-l-4 border-l-transparent text-muted-foreground"
                               }`}
-                              style={{
-                                color: isSelected ? "var(--color-ink)" : "var(--color-ink-secondary)",
-                                borderLeft: isSelected ? "3px solid var(--color-accent)" : "3px solid transparent",
-                              }}
                             >
                               <Icon className="h-5 w-5 shrink-0 opacity-70" />
                               {item.label}
@@ -388,10 +371,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
             </>
           )}
         </div>
-        <div
-          className="flex items-center justify-between border-t px-4 py-2 text-[11px]"
-          style={{ borderColor: "var(--color-border)", color: "var(--color-ink-muted)" }}
-        >
+        <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[11px] text-muted-foreground/40">
           <span>↑↓ navigate</span>
           <span>↵ select</span>
           <span>esc close</span>

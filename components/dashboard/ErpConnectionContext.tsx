@@ -28,7 +28,7 @@ export function ErpConnectionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    checkConnection();
+    queueMicrotask(() => checkConnection());
   }, [checkConnection]);
 
   return (

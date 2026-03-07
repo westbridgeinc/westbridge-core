@@ -1,20 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { ROUTES, SITE } from "@/lib/config/site";
+import { ROUTES } from "@/lib/config/site";
+import { Logo } from "@/components/brand/Logo";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [csrfToken, setCsrfToken] = useState<string | null>(null);
-  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [, setFailedAttempts] = useState(0);
 
   useEffect(() => {
     fetch("/api/csrf")
@@ -62,113 +66,113 @@ export default function LoginPage() {
     }
   }
 
-  const showForgotPassword = failedAttempts >= 3;
-
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
-      <div
-        className="relative flex min-h-[120px] w-full flex-col items-center justify-center px-6 md:min-h-screen md:w-[48%] md:px-12"
-        style={{ background: "var(--color-surface-dark)" }}
-      >
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{ background: "radial-gradient(ellipse 60% 40% at 80% 50%, white, transparent)" }}
-        />
-        <div className="relative flex flex-col items-center text-center">
-          <Image
-            src={SITE.logoPath}
-            alt={`${SITE.name} ${SITE.legal}`}
-            width={180}
-            height={54}
-            priority
-            sizes="180px"
-            className="h-12 w-auto object-contain brightness-0 invert md:h-14"
-          />
-          <p className="mt-2 text-body text-sm md:mt-4 md:text-base" style={{ color: "var(--color-ink-muted)" }}>
-            {SITE.tagline}
-          </p>
+      {/* Left: black panel with WB monogram — hidden on mobile except minimal */}
+      <div className="hidden min-h-screen w-[50%] flex-col items-center justify-center bg-black px-12 md:flex">
+        <div className="flex flex-col items-center text-center">
+          <span className="font-serif text-8xl font-bold leading-none text-white">WB</span>
+          <span className="mt-4 font-sans text-[10px] font-medium uppercase tracking-[0.25em] text-white/90">
+            Westbridge
+          </span>
+          <span className="mt-1 font-sans text-[8px] font-light uppercase tracking-[0.2em] text-white/70">
+            Inc.
+          </span>
         </div>
       </div>
-      <div
-        className="flex min-h-[calc(100vh-120px)] w-full flex-col items-center justify-center md:min-h-screen md:w-[52%]"
-        style={{ background: "var(--color-ground)" }}
-      >
+
+      {/* Right: white panel, form */}
+      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background md:w-[50%]">
         <div className="w-full max-w-[400px] px-6 md:px-8">
-          <h2 className="text-h2 font-semibold tracking-tight" style={{ color: "var(--color-ink)" }}>
-            Sign in
-          </h2>
+          {/* Mobile: show small logo */}
+          <div className="mb-8 flex justify-center md:hidden">
+            <Logo variant="mark" size="md" className="text-foreground" />
+          </div>
+
+          <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground">
+            Welcome back
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Sign in to your account
+          </p>
+
           {csrfToken === null ? (
-            <div className="mt-10 space-y-5" aria-busy="true">
-              <div>
-                <div className="mb-2 h-4 w-24 rounded" style={{ background: "var(--color-ground-muted)" }} />
-                <div className="input mt-2 h-12 rounded-[var(--radius-sm)]" style={{ background: "var(--color-ground-muted)" }} />
+            <div className="mt-8 space-y-5" aria-busy="true">
+              <div className="space-y-2">
+                <div className="h-4 w-24 rounded bg-muted" />
+                <div className="h-11 w-full rounded-md border border-input bg-muted/50" />
               </div>
-              <div>
-                <div className="mb-2 h-4 w-20 rounded" style={{ background: "var(--color-ground-muted)" }} />
-                <div className="input mt-2 h-12 rounded-[var(--radius-sm)]" style={{ background: "var(--color-ground-muted)" }} />
+              <div className="space-y-2">
+                <div className="h-4 w-20 rounded bg-muted" />
+                <div className="h-11 w-full rounded-md border border-input bg-muted/50" />
               </div>
-              <div className="mt-8 h-10 w-full rounded-[var(--radius-sm)]" style={{ background: "var(--color-ground-muted)" }} />
+              <div className="mt-8 h-11 w-full rounded-md bg-muted" />
             </div>
           ) : (
-            <motion.form
-              onSubmit={handleSubmit}
-              className="mt-10"
-              animate={error ? { x: [0, -8, 8, -4, 4, 0] } : { x: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              <label className="text-label mb-2 block font-medium" style={{ color: "var(--color-ink-secondary)" }}>
-                Email
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input mt-2"
-                placeholder="you@company.com"
-              />
-              <label className="text-label mb-2 mt-5 block font-medium" style={{ color: "var(--color-ink-secondary)" }}>
-                Password
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input mt-2"
-              />
+            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="login-email">Email</Label>
+                <Input
+                  id="login-email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  className="h-11 rounded-md border-border focus-visible:ring-black"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="login-password">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="login-password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="h-11 rounded-md border-border focus-visible:ring-black"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+              </div>
+
               {error && (
-                <p className="mt-4 text-caption" style={{ color: "hsl(0, 65%, 48%)" }}>{error}</p>
+                <Alert variant="destructive" className="rounded-md">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
               )}
-              {showForgotPassword && (
-                <p className="mt-3 text-body" style={{ color: "var(--color-ink-secondary)" }}>
-                  Forgot your password?{" "}
-                  <Link href="mailto:support@westbridge.gy" className="font-medium" style={{ color: "var(--color-accent)" }}>
-                    Contact support@westbridge.gy
-                  </Link>
-                </p>
-              )}
-              <button
+
+              <p className="text-sm text-muted-foreground">
+                <Link href="/forgot-password" className="font-medium text-foreground underline underline-offset-2 hover:no-underline">
+                  Forgot your password?
+                </Link>
+              </p>
+
+              <Button
                 type="submit"
                 disabled={loading}
-                className="btn-primary mt-8 w-full disabled:opacity-60 disabled:transform-none"
+                className="h-11 w-full rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 {loading ? "Signing in…" : "Sign in"}
-              </button>
-            </motion.form>
+              </Button>
+            </form>
           )}
-          <p className="mt-8 text-center text-body" style={{ color: "var(--color-ink-secondary)" }}>
-            <Link href={ROUTES.signup} className="font-medium transition-opacity hover:opacity-100" style={{ color: "var(--color-ink)" }}>
-              Don&apos;t have an account? Start free trial
+
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            Don&apos;t have an account?{" "}
+            <Link href={ROUTES.signup} className="font-medium text-foreground underline underline-offset-2 hover:no-underline">
+              Get started
             </Link>
           </p>
-          {csrfToken !== null && (
-            <p className="mt-3 text-center text-caption">
-              <Link href="mailto:support@westbridge.gy" className="transition-opacity hover:opacity-100">
-                Forgot password?
-              </Link>
-            </p>
-          )}
         </div>
       </div>
     </div>

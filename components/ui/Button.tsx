@@ -1,78 +1,71 @@
 "use client";
 
-import { forwardRef, type ButtonHTMLAttributes } from "react";
+import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "@/lib/utils";
 
-export type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
-export type ButtonSize = "sm" | "md" | "lg";
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground rounded-md shadow-sm hover:bg-primary/90",
+        primary: "bg-primary text-primary-foreground rounded-md shadow-sm hover:bg-primary/90",
+        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+        outline: "border border-input bg-background rounded-md hover:bg-accent hover:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-9 px-4 py-2",
+        sm: "h-8 rounded-md px-3 text-xs",
+        md: "h-9 px-4 py-2",
+        lg: "h-11 rounded-md px-8",
+        icon: "size-9",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+);
 
-const SIZE_CLASS: Record<ButtonSize, string> = {
-  sm: "h-8 px-4 text-sm",
-  md: "h-9 px-5 text-[0.9375rem]",
-  lg: "h-11 px-7 text-[0.9375rem]",
-};
-
-const VARIANT_CLASS: Record<ButtonVariant, string> = {
-  primary:
-    "bg-[var(--color-primary)] text-white border-transparent hover:bg-[var(--color-primary-hover)] shadow-[var(--shadow-button)] active:scale-[0.97]",
-  secondary:
-    "bg-transparent text-[var(--color-ink-secondary)] border border-[var(--color-border)] hover:text-[var(--color-ink)] hover:border-[var(--color-ink-muted)] hover:bg-[var(--color-ground-section)]",
-  danger:
-    "bg-[var(--color-error)] text-white border-transparent hover:opacity-90",
-  ghost:
-    "bg-transparent text-[var(--color-ink-secondary)] border-transparent hover:bg-[var(--color-ground-section)] hover:text-[var(--color-ink)]",
-};
-
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
   loading?: boolean;
   leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
 }
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      variant = "primary",
-      size = "md",
-      loading = false,
-      leftIcon,
-      rightIcon,
-      className = "",
-      disabled,
-      children,
-      ...props
-    },
-    ref
-  ) => {
-    const isDisabled = disabled ?? loading;
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, loading, leftIcon, children, disabled, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button";
     return (
-      <button
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
-        type="button"
-        disabled={isDisabled}
-        className={[
-          "inline-flex items-center justify-center gap-2 rounded-[var(--radius-sm)] font-semibold transition-all duration-150",
-          SIZE_CLASS[size],
-          VARIANT_CLASS[variant],
-          isDisabled && "cursor-not-allowed opacity-50",
-          className,
-        ].filter(Boolean).join(" ")}
-        style={{ transitionProperty: "min-width, opacity, transform" }}
+        disabled={disabled ?? loading}
         {...props}
       >
-        {loading ? (
-          <span
-            className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent"
-            aria-hidden
-          />
+        {loading && !asChild ? (
+          <>
+            <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden />
+            {children}
+          </>
         ) : (
-          leftIcon
+          <>
+            {leftIcon}
+            {children}
+          </>
         )}
-        {children}
-        {!loading && rightIcon}
-      </button>
+      </Comp>
     );
   }
 );
 Button.displayName = "Button";
+
+export { Button, buttonVariants };

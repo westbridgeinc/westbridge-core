@@ -23,6 +23,9 @@ export const ROUTES = {
   login: "/login",
   signup: "/signup",
   dashboard: "/dashboard",
+  forgotPassword: "/forgot-password",
+  resetPassword: "/reset-password",
+  invite: "/invite",
   terms: "/terms",
   privacy: "/privacy",
 } as const;
@@ -32,11 +35,10 @@ export const TRIAL = {
   noCardRequired: true,
 } as const;
 
-/** Display currency for marketing (pricing). GYD default, USD toggle. */
+/** Display currency for marketing (pricing). USD only. */
 export const CURRENCY = {
   primary: "USD",
-  defaultDisplay: "GYD" as const,
+  defaultDisplay: "USD" as const,
   label: "USD",
-  /** For Caribbean localization: GYD default with USD toggle */
-  supported: ["GYD", "USD"] as const,
+  supported: ["USD"] as const,
 } as const;

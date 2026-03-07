@@ -2,25 +2,29 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
-import { SITE, ROUTES } from "@/lib/config/site";
+import { ROUTES } from "@/lib/config/site";
+import { Logo } from "@/components/brand/Logo";
+import { Button } from "@/components/ui/Button";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { cn } from "@/lib/utils";
 
 const navLinks = [
+  { href: ROUTES.modules, label: "Features" },
   { href: ROUTES.pricing, label: "Pricing" },
-  { href: ROUTES.modules, label: "Modules" },
   { href: ROUTES.about, label: "About" },
 ];
 
-const SCROLL_COMPACT_THRESHOLD = 100;
+const SCROLL_THRESHOLD = 24;
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > SCROLL_COMPACT_THRESHOLD);
+    const onScroll = () => setScrolled(window.scrollY > SCROLL_THRESHOLD);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -28,64 +32,49 @@ export function Navbar() {
 
   return (
     <nav
-      className="sticky top-0 z-10 border-b transition-[box-shadow,padding] duration-200"
-      style={{
-        borderColor: "var(--color-border-subtle)",
-        background: "hsla(0, 0%, 100%, 0.9)",
-        backdropFilter: "blur(12px)",
-        boxShadow: scrolled ? "0 1px 3px rgba(0,0,0,0.06)" : "none",
-      }}
+      className={cn(
+        "fixed left-0 right-0 top-0 z-50 h-16 transition-all duration-200",
+        scrolled
+          ? "border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+          : "border-b border-transparent bg-transparent"
+      )}
     >
-      <div
-        className="mx-auto flex items-center justify-between transition-[padding] duration-200"
-        style={{
-          maxWidth: "var(--max-width)",
-          padding: scrolled ? "12px var(--space-container)" : "16px var(--space-container)",
-        }}
-      >
-        <Link href={ROUTES.home} className="flex shrink-0 items-center transition-opacity hover:opacity-85">
-          <Image
-            src={SITE.logoPath}
-            alt={`${SITE.name} ${SITE.legal}`}
-            width={160}
-            height={48}
-            priority
-            sizes="(max-width: 768px) 140px, 160px"
-            className="h-10 w-auto object-contain"
-          />
+      <div className="mx-auto flex h-full max-w-6xl items-center justify-between px-6">
+        <Link href={ROUTES.home} className="inline-flex text-foreground hover:opacity-90">
+          <Logo variant="text" size="md" />
         </Link>
         <div className="hidden items-center gap-8 md:flex">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="text-body font-medium transition-colors hover:opacity-100"
-              style={{ color: "var(--color-ink-secondary)" }}
+              className="text-[13px] font-medium uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:text-foreground"
             >
               {link.label}
             </Link>
           ))}
         </div>
-        <div className="hidden items-center gap-4 md:flex">
+        <div className="hidden items-center gap-2 md:flex">
+          <LanguageSwitcher />
+          <ThemeToggle />
           <Link
             href={ROUTES.login}
-            className="text-body font-medium transition-colors hover:opacity-100"
-            style={{ color: "var(--color-ink-secondary)" }}
+            className="text-[13px] font-medium uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
           >
             Sign in
           </Link>
-          <Link href={ROUTES.signup} className="btn-primary">
-            Get started
-          </Link>
+          <Button asChild size="sm" className="rounded-md bg-primary text-primary-foreground">
+            <Link href={ROUTES.signup}>Get Started</Link>
+          </Button>
         </div>
+
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
-          className="flex h-10 w-10 items-center justify-center rounded-lg border transition-colors hover:bg-[var(--color-ground-section)] md:hidden"
-          style={{ borderColor: "var(--color-border)" }}
+          className="flex h-10 w-10 items-center justify-center rounded-md border border-border md:hidden"
           aria-label="Open menu"
         >
-          <Menu className="h-5 w-5" style={{ color: "var(--color-ink-secondary)" }} />
+          <Menu className="h-5 w-5 text-foreground" />
         </button>
       </div>
 
@@ -97,62 +86,48 @@ export function Navbar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
               onClick={() => setMobileOpen(false)}
               aria-hidden
             />
             <motion.div
-              className="fixed inset-x-0 top-0 z-30 flex flex-col border-b md:hidden"
-              style={{
-                borderColor: "var(--color-border-subtle)",
-                background: "var(--color-ground)",
-                boxShadow: "var(--shadow-lg)",
-              }}
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+              className="fixed inset-y-0 right-0 z-30 flex w-full max-w-[300px] flex-col border-l border-border bg-background md:hidden"
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "tween", duration: 0.2 }}
             >
-              <div className="flex items-center justify-between px-4 py-4" style={{ paddingLeft: "var(--space-container)", paddingRight: "var(--space-container)" }}>
-                <Link href={ROUTES.home} onClick={() => setMobileOpen(false)} className="flex shrink-0 items-center">
-                  <Image src={SITE.logoPath} alt={SITE.name} width={140} height={42} sizes="140px" className="h-9 w-auto object-contain" />
-                </Link>
+              <div className="flex items-center justify-between border-b border-border px-6 py-4">
+                <Logo variant="text" size="md" />
                 <button
                   type="button"
                   onClick={() => setMobileOpen(false)}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg transition-colors hover:bg-[var(--color-ground-section)]"
+                  className="flex h-10 w-10 items-center justify-center rounded-md"
                   aria-label="Close menu"
                 >
-                  <X className="h-5 w-5" style={{ color: "var(--color-ink-secondary)" }} />
+                  <X className="h-5 w-5" />
                 </button>
               </div>
-              <div className="flex flex-1 flex-col overflow-y-auto px-4 pb-8" style={{ paddingLeft: "var(--space-container)", paddingRight: "var(--space-container)" }}>
+              <div className="flex flex-1 flex-col gap-6 px-6 py-8">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
-                    className="flex h-14 min-h-[56px] items-center border-b text-body font-medium transition-colors"
-                    style={{ color: "var(--color-ink-secondary)", borderColor: "var(--color-border-subtle)" }}
+                    className="text-[13px] font-medium uppercase tracking-wider text-foreground"
                   >
                     {link.label}
                   </Link>
                 ))}
-                <div className="mt-6 flex flex-col gap-3">
-                  <Link
-                    href={ROUTES.login}
-                    onClick={() => setMobileOpen(false)}
-                    className="flex h-14 min-h-[56px] items-center justify-center rounded-lg border font-medium transition-colors"
-                    style={{ borderColor: "var(--color-border)", color: "var(--color-ink)" }}
-                  >
-                    Sign in
+                <div className="flex flex-col gap-3 border-t border-border pt-6">
+                  <Link href={ROUTES.login} onClick={() => setMobileOpen(false)}>
+                    <Button variant="ghost" className="w-full justify-center">
+                      Sign in
+                    </Button>
                   </Link>
-                  <Link
-                    href={ROUTES.signup}
-                    onClick={() => setMobileOpen(false)}
-                    className="btn-primary flex h-14 min-h-[56px] items-center justify-center"
-                  >
-                    Get started
+                  <Link href={ROUTES.signup} onClick={() => setMobileOpen(false)}>
+                    <Button className="w-full justify-center bg-primary text-primary-foreground">
+                      Get Started
+                    </Button>
                   </Link>
                 </div>
               </div>

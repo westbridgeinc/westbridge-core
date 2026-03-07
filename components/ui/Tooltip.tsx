@@ -41,11 +41,7 @@ export function Tooltip({ content, children, side = "top" }: TooltipProps) {
       {visible && (
         <span
           role="tooltip"
-          className={`absolute z-50 whitespace-nowrap rounded-[var(--radius-sm)] px-3 py-1.5 text-xs font-medium shadow-lg pointer-events-none ${positionClass[side]}`}
-          style={{
-            background: "var(--color-ink)",
-            color: "var(--color-ground)",
-          }}
+          className={`absolute z-50 whitespace-nowrap rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground shadow-md pointer-events-none ${positionClass[side]}`}
         >
           {content}
         </span>

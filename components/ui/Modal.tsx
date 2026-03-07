@@ -79,7 +79,7 @@ export function Modal({ open, onClose, title, children, className = "" }: ModalP
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
             onClick={onClose}
             aria-hidden
           />
@@ -93,33 +93,24 @@ export function Modal({ open, onClose, title, children, className = "" }: ModalP
               role="dialog"
               aria-modal
               aria-label={title}
-              className={`relative w-full max-w-lg overflow-hidden rounded-[var(--radius-lg)] border shadow-xl ${className}`}
-              style={{
-                background: "var(--color-ground-elevated)",
-                borderColor: "var(--color-border)",
-              }}
+              className={`relative w-full max-w-lg overflow-hidden rounded-lg border border-border bg-background p-6 shadow-lg ${className}`}
               onClick={(e) => e.stopPropagation()}
               onKeyDown={handleKeyDown}
             >
               {title && (
-                <div
-                  className="flex items-center justify-between border-b px-6 py-4"
-                  style={{ borderColor: "var(--color-border)" }}
-                >
-                  <h2 className="text-h3 font-semibold" style={{ color: "var(--color-ink)" }}>
-                    {title}
-                  </h2>
+                <div className="-mx-6 -mt-6 mb-4 flex items-center justify-between border-b border-border px-6 py-4">
+                  <h2 className="text-lg font-semibold text-foreground">{title}</h2>
                   <button
                     type="button"
                     onClick={onClose}
-                    className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] transition-colors hover:bg-[var(--color-ground-muted)]"
+                    className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted"
                     aria-label="Close"
                   >
-                    <X className="h-4 w-4" style={{ color: "var(--color-ink-tertiary)" }} />
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
               )}
-              <div className="px-6 py-5">{children}</div>
+              <div>{children}</div>
             </motion.div>
           </div>
         </>

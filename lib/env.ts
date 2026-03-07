@@ -6,6 +6,7 @@
 const required = [
   "DATABASE_URL",
   "CSRF_SECRET",
+  "ENCRYPTION_KEY",
 ] as const;
 
 const requiredInProduction = [
@@ -16,6 +17,7 @@ const requiredInProduction = [
 
 const optional = [
   "REDIS_URL",
+  "SYSTEM_ACCOUNT_ID",
   "ERPNEXT_URL",
   "NEXT_PUBLIC_APP_URL",
   "TWOCO_MERCHANT_CODE",

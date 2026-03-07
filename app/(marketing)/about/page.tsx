@@ -1,3 +1,4 @@
+export const revalidate = 3600; // 1 hour — marketing pages change infrequently
 import AboutContent from "./about-content";
 
 export const metadata = {

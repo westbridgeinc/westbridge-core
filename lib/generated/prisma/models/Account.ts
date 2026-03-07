@@ -28,6 +28,7 @@ export type AccountMinAggregateOutputType = {
   id: string | null
   email: string | null
   companyName: string | null
+  erpnextCompany: string | null
   plan: string | null
   status: string | null
   twocoOrderId: string | null
@@ -40,6 +41,7 @@ export type AccountMaxAggregateOutputType = {
   id: string | null
   email: string | null
   companyName: string | null
+  erpnextCompany: string | null
   plan: string | null
   status: string | null
   twocoOrderId: string | null
@@ -52,6 +54,7 @@ export type AccountCountAggregateOutputType = {
   id: number
   email: number
   companyName: number
+  erpnextCompany: number
   plan: number
   status: number
   twocoOrderId: number
@@ -67,6 +70,7 @@ export type AccountMinAggregateInputType = {
   id?: true
   email?: true
   companyName?: true
+  erpnextCompany?: true
   plan?: true
   status?: true
   twocoOrderId?: true
@@ -79,6 +83,7 @@ export type AccountMaxAggregateInputType = {
   id?: true
   email?: true
   companyName?: true
+  erpnextCompany?: true
   plan?: true
   status?: true
   twocoOrderId?: true
@@ -91,6 +96,7 @@ export type AccountCountAggregateInputType = {
   id?: true
   email?: true
   companyName?: true
+  erpnextCompany?: true
   plan?: true
   status?: true
   twocoOrderId?: true
@@ -177,6 +183,7 @@ export type AccountGroupByOutputType = {
   id: string
   email: string
   companyName: string
+  erpnextCompany: string | null
   plan: string
   status: string
   twocoOrderId: string | null
@@ -211,6 +218,7 @@ export type AccountWhereInput = {
   id?: Prisma.StringFilter<"Account"> | string
   email?: Prisma.StringFilter<"Account"> | string
   companyName?: Prisma.StringFilter<"Account"> | string
+  erpnextCompany?: Prisma.StringNullableFilter<"Account"> | string | null
   plan?: Prisma.StringFilter<"Account"> | string
   status?: Prisma.StringFilter<"Account"> | string
   twocoOrderId?: Prisma.StringNullableFilter<"Account"> | string | null
@@ -222,12 +230,15 @@ export type AccountWhereInput = {
   subscriptions?: Prisma.SubscriptionListRelationFilter
   auditLogs?: Prisma.AuditLogListRelationFilter
   apiKeys?: Prisma.ApiKeyListRelationFilter
+  inviteTokens?: Prisma.InviteTokenListRelationFilter
+  webhookEndpoints?: Prisma.WebhookEndpointListRelationFilter
 }
 
 export type AccountOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   companyName?: Prisma.SortOrder
+  erpnextCompany?: Prisma.SortOrderInput | Prisma.SortOrder
   plan?: Prisma.SortOrder
   status?: Prisma.SortOrder
   twocoOrderId?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -239,6 +250,8 @@ export type AccountOrderByWithRelationInput = {
   subscriptions?: Prisma.SubscriptionOrderByRelationAggregateInput
   auditLogs?: Prisma.AuditLogOrderByRelationAggregateInput
   apiKeys?: Prisma.ApiKeyOrderByRelationAggregateInput
+  inviteTokens?: Prisma.InviteTokenOrderByRelationAggregateInput
+  webhookEndpoints?: Prisma.WebhookEndpointOrderByRelationAggregateInput
 }
 
 export type AccountWhereUniqueInput = Prisma.AtLeast<{
@@ -248,6 +261,7 @@ export type AccountWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.AccountWhereInput[]
   NOT?: Prisma.AccountWhereInput | Prisma.AccountWhereInput[]
   companyName?: Prisma.StringFilter<"Account"> | string
+  erpnextCompany?: Prisma.StringNullableFilter<"Account"> | string | null
   plan?: Prisma.StringFilter<"Account"> | string
   status?: Prisma.StringFilter<"Account"> | string
   twocoOrderId?: Prisma.StringNullableFilter<"Account"> | string | null
@@ -259,12 +273,15 @@ export type AccountWhereUniqueInput = Prisma.AtLeast<{
   subscriptions?: Prisma.SubscriptionListRelationFilter
   auditLogs?: Prisma.AuditLogListRelationFilter
   apiKeys?: Prisma.ApiKeyListRelationFilter
+  inviteTokens?: Prisma.InviteTokenListRelationFilter
+  webhookEndpoints?: Prisma.WebhookEndpointListRelationFilter
 }, "id" | "email">
 
 export type AccountOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   companyName?: Prisma.SortOrder
+  erpnextCompany?: Prisma.SortOrderInput | Prisma.SortOrder
   plan?: Prisma.SortOrder
   status?: Prisma.SortOrder
   twocoOrderId?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -284,6 +301,7 @@ export type AccountScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Account"> | string
   email?: Prisma.StringWithAggregatesFilter<"Account"> | string
   companyName?: Prisma.StringWithAggregatesFilter<"Account"> | string
+  erpnextCompany?: Prisma.StringNullableWithAggregatesFilter<"Account"> | string | null
   plan?: Prisma.StringWithAggregatesFilter<"Account"> | string
   status?: Prisma.StringWithAggregatesFilter<"Account"> | string
   twocoOrderId?: Prisma.StringNullableWithAggregatesFilter<"Account"> | string | null
@@ -297,6 +315,7 @@ export type AccountCreateInput = {
   id?: string
   email: string
   companyName: string
+  erpnextCompany?: string | null
   plan: string
   status?: string
   twocoOrderId?: string | null
@@ -308,12 +327,15 @@ export type AccountCreateInput = {
   subscriptions?: Prisma.SubscriptionCreateNestedManyWithoutAccountInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutAccountInput
   apiKeys?: Prisma.ApiKeyCreateNestedManyWithoutAccountInput
+  inviteTokens?: Prisma.InviteTokenCreateNestedManyWithoutAccountInput
+  webhookEndpoints?: Prisma.WebhookEndpointCreateNestedManyWithoutAccountInput
 }
 
 export type AccountUncheckedCreateInput = {
   id?: string
   email: string
   companyName: string
+  erpnextCompany?: string | null
   plan: string
   status?: string
   twocoOrderId?: string | null
@@ -325,12 +347,15 @@ export type AccountUncheckedCreateInput = {
   subscriptions?: Prisma.SubscriptionUncheckedCreateNestedManyWithoutAccountInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutAccountInput
   apiKeys?: Prisma.ApiKeyUncheckedCreateNestedManyWithoutAccountInput
+  inviteTokens?: Prisma.InviteTokenUncheckedCreateNestedManyWithoutAccountInput
+  webhookEndpoints?: Prisma.WebhookEndpointUncheckedCreateNestedManyWithoutAccountInput
 }
 
 export type AccountUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   companyName?: Prisma.StringFieldUpdateOperationsInput | string
+  erpnextCompany?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   twocoOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -342,12 +367,15 @@ export type AccountUpdateInput = {
   subscriptions?: Prisma.SubscriptionUpdateManyWithoutAccountNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutAccountNestedInput
   apiKeys?: Prisma.ApiKeyUpdateManyWithoutAccountNestedInput
+  inviteTokens?: Prisma.InviteTokenUpdateManyWithoutAccountNestedInput
+  webhookEndpoints?: Prisma.WebhookEndpointUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   companyName?: Prisma.StringFieldUpdateOperationsInput | string
+  erpnextCompany?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   twocoOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -359,12 +387,15 @@ export type AccountUncheckedUpdateInput = {
   subscriptions?: Prisma.SubscriptionUncheckedUpdateManyWithoutAccountNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutAccountNestedInput
   apiKeys?: Prisma.ApiKeyUncheckedUpdateManyWithoutAccountNestedInput
+  inviteTokens?: Prisma.InviteTokenUncheckedUpdateManyWithoutAccountNestedInput
+  webhookEndpoints?: Prisma.WebhookEndpointUncheckedUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountCreateManyInput = {
   id?: string
   email: string
   companyName: string
+  erpnextCompany?: string | null
   plan: string
   status?: string
   twocoOrderId?: string | null
@@ -378,6 +409,7 @@ export type AccountUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   companyName?: Prisma.StringFieldUpdateOperationsInput | string
+  erpnextCompany?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   twocoOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -391,6 +423,7 @@ export type AccountUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   companyName?: Prisma.StringFieldUpdateOperationsInput | string
+  erpnextCompany?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   twocoOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -412,6 +445,7 @@ export type AccountCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   companyName?: Prisma.SortOrder
+  erpnextCompany?: Prisma.SortOrder
   plan?: Prisma.SortOrder
   status?: Prisma.SortOrder
   twocoOrderId?: Prisma.SortOrder
@@ -425,6 +459,7 @@ export type AccountMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   companyName?: Prisma.SortOrder
+  erpnextCompany?: Prisma.SortOrder
   plan?: Prisma.SortOrder
   status?: Prisma.SortOrder
   twocoOrderId?: Prisma.SortOrder
@@ -437,6 +472,7 @@ export type AccountMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   companyName?: Prisma.SortOrder
+  erpnextCompany?: Prisma.SortOrder
   plan?: Prisma.SortOrder
   status?: Prisma.SortOrder
   twocoOrderId?: Prisma.SortOrder
@@ -527,10 +563,39 @@ export type AccountUpdateOneRequiredWithoutApiKeysNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.AccountUpdateToOneWithWhereWithoutApiKeysInput, Prisma.AccountUpdateWithoutApiKeysInput>, Prisma.AccountUncheckedUpdateWithoutApiKeysInput>
 }
 
+export type AccountCreateNestedOneWithoutInviteTokensInput = {
+  create?: Prisma.XOR<Prisma.AccountCreateWithoutInviteTokensInput, Prisma.AccountUncheckedCreateWithoutInviteTokensInput>
+  connectOrCreate?: Prisma.AccountCreateOrConnectWithoutInviteTokensInput
+  connect?: Prisma.AccountWhereUniqueInput
+}
+
+export type AccountUpdateOneRequiredWithoutInviteTokensNestedInput = {
+  create?: Prisma.XOR<Prisma.AccountCreateWithoutInviteTokensInput, Prisma.AccountUncheckedCreateWithoutInviteTokensInput>
+  connectOrCreate?: Prisma.AccountCreateOrConnectWithoutInviteTokensInput
+  upsert?: Prisma.AccountUpsertWithoutInviteTokensInput
+  connect?: Prisma.AccountWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.AccountUpdateToOneWithWhereWithoutInviteTokensInput, Prisma.AccountUpdateWithoutInviteTokensInput>, Prisma.AccountUncheckedUpdateWithoutInviteTokensInput>
+}
+
+export type AccountCreateNestedOneWithoutWebhookEndpointsInput = {
+  create?: Prisma.XOR<Prisma.AccountCreateWithoutWebhookEndpointsInput, Prisma.AccountUncheckedCreateWithoutWebhookEndpointsInput>
+  connectOrCreate?: Prisma.AccountCreateOrConnectWithoutWebhookEndpointsInput
+  connect?: Prisma.AccountWhereUniqueInput
+}
+
+export type AccountUpdateOneRequiredWithoutWebhookEndpointsNestedInput = {
+  create?: Prisma.XOR<Prisma.AccountCreateWithoutWebhookEndpointsInput, Prisma.AccountUncheckedCreateWithoutWebhookEndpointsInput>
+  connectOrCreate?: Prisma.AccountCreateOrConnectWithoutWebhookEndpointsInput
+  upsert?: Prisma.AccountUpsertWithoutWebhookEndpointsInput
+  connect?: Prisma.AccountWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.AccountUpdateToOneWithWhereWithoutWebhookEndpointsInput, Prisma.AccountUpdateWithoutWebhookEndpointsInput>, Prisma.AccountUncheckedUpdateWithoutWebhookEndpointsInput>
+}
+
 export type AccountCreateWithoutUsersInput = {
   id?: string
   email: string
   companyName: string
+  erpnextCompany?: string | null
   plan: string
   status?: string
   twocoOrderId?: string | null
@@ -541,12 +606,15 @@ export type AccountCreateWithoutUsersInput = {
   subscriptions?: Prisma.SubscriptionCreateNestedManyWithoutAccountInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutAccountInput
   apiKeys?: Prisma.ApiKeyCreateNestedManyWithoutAccountInput
+  inviteTokens?: Prisma.InviteTokenCreateNestedManyWithoutAccountInput
+  webhookEndpoints?: Prisma.WebhookEndpointCreateNestedManyWithoutAccountInput
 }
 
 export type AccountUncheckedCreateWithoutUsersInput = {
   id?: string
   email: string
   companyName: string
+  erpnextCompany?: string | null
   plan: string
   status?: string
   twocoOrderId?: string | null
@@ -557,6 +625,8 @@ export type AccountUncheckedCreateWithoutUsersInput = {
   subscriptions?: Prisma.SubscriptionUncheckedCreateNestedManyWithoutAccountInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutAccountInput
   apiKeys?: Prisma.ApiKeyUncheckedCreateNestedManyWithoutAccountInput
+  inviteTokens?: Prisma.InviteTokenUncheckedCreateNestedManyWithoutAccountInput
+  webhookEndpoints?: Prisma.WebhookEndpointUncheckedCreateNestedManyWithoutAccountInput
 }
 
 export type AccountCreateOrConnectWithoutUsersInput = {
@@ -579,6 +649,7 @@ export type AccountUpdateWithoutUsersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   companyName?: Prisma.StringFieldUpdateOperationsInput | string
+  erpnextCompany?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   twocoOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -589,12 +660,15 @@ export type AccountUpdateWithoutUsersInput = {
   subscriptions?: Prisma.SubscriptionUpdateManyWithoutAccountNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutAccountNestedInput
   apiKeys?: Prisma.ApiKeyUpdateManyWithoutAccountNestedInput
+  inviteTokens?: Prisma.InviteTokenUpdateManyWithoutAccountNestedInput
+  webhookEndpoints?: Prisma.WebhookEndpointUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountUncheckedUpdateWithoutUsersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   companyName?: Prisma.StringFieldUpdateOperationsInput | string
+  erpnextCompany?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   twocoOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -605,12 +679,15 @@ export type AccountUncheckedUpdateWithoutUsersInput = {
   subscriptions?: Prisma.SubscriptionUncheckedUpdateManyWithoutAccountNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutAccountNestedInput
   apiKeys?: Prisma.ApiKeyUncheckedUpdateManyWithoutAccountNestedInput
+  inviteTokens?: Prisma.InviteTokenUncheckedUpdateManyWithoutAccountNestedInput
+  webhookEndpoints?: Prisma.WebhookEndpointUncheckedUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountCreateWithoutSubscriptionsInput = {
   id?: string
   email: string
   companyName: string
+  erpnextCompany?: string | null
   plan: string
   status?: string
   twocoOrderId?: string | null
@@ -621,12 +698,15 @@ export type AccountCreateWithoutSubscriptionsInput = {
   users?: Prisma.UserCreateNestedManyWithoutAccountInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutAccountInput
   apiKeys?: Prisma.ApiKeyCreateNestedManyWithoutAccountInput
+  inviteTokens?: Prisma.InviteTokenCreateNestedManyWithoutAccountInput
+  webhookEndpoints?: Prisma.WebhookEndpointCreateNestedManyWithoutAccountInput
 }
 
 export type AccountUncheckedCreateWithoutSubscriptionsInput = {
   id?: string
   email: string
   companyName: string
+  erpnextCompany?: string | null
   plan: string
   status?: string
   twocoOrderId?: string | null
@@ -637,6 +717,8 @@ export type AccountUncheckedCreateWithoutSubscriptionsInput = {
   users?: Prisma.UserUncheckedCreateNestedManyWithoutAccountInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutAccountInput
   apiKeys?: Prisma.ApiKeyUncheckedCreateNestedManyWithoutAccountInput
+  inviteTokens?: Prisma.InviteTokenUncheckedCreateNestedManyWithoutAccountInput
+  webhookEndpoints?: Prisma.WebhookEndpointUncheckedCreateNestedManyWithoutAccountInput
 }
 
 export type AccountCreateOrConnectWithoutSubscriptionsInput = {
@@ -659,6 +741,7 @@ export type AccountUpdateWithoutSubscriptionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   companyName?: Prisma.StringFieldUpdateOperationsInput | string
+  erpnextCompany?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   twocoOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -669,12 +752,15 @@ export type AccountUpdateWithoutSubscriptionsInput = {
   users?: Prisma.UserUpdateManyWithoutAccountNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutAccountNestedInput
   apiKeys?: Prisma.ApiKeyUpdateManyWithoutAccountNestedInput
+  inviteTokens?: Prisma.InviteTokenUpdateManyWithoutAccountNestedInput
+  webhookEndpoints?: Prisma.WebhookEndpointUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountUncheckedUpdateWithoutSubscriptionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   companyName?: Prisma.StringFieldUpdateOperationsInput | string
+  erpnextCompany?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   twocoOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -685,12 +771,15 @@ export type AccountUncheckedUpdateWithoutSubscriptionsInput = {
   users?: Prisma.UserUncheckedUpdateManyWithoutAccountNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutAccountNestedInput
   apiKeys?: Prisma.ApiKeyUncheckedUpdateManyWithoutAccountNestedInput
+  inviteTokens?: Prisma.InviteTokenUncheckedUpdateManyWithoutAccountNestedInput
+  webhookEndpoints?: Prisma.WebhookEndpointUncheckedUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountCreateWithoutAuditLogsInput = {
   id?: string
   email: string
   companyName: string
+  erpnextCompany?: string | null
   plan: string
   status?: string
   twocoOrderId?: string | null
@@ -701,12 +790,15 @@ export type AccountCreateWithoutAuditLogsInput = {
   users?: Prisma.UserCreateNestedManyWithoutAccountInput
   subscriptions?: Prisma.SubscriptionCreateNestedManyWithoutAccountInput
   apiKeys?: Prisma.ApiKeyCreateNestedManyWithoutAccountInput
+  inviteTokens?: Prisma.InviteTokenCreateNestedManyWithoutAccountInput
+  webhookEndpoints?: Prisma.WebhookEndpointCreateNestedManyWithoutAccountInput
 }
 
 export type AccountUncheckedCreateWithoutAuditLogsInput = {
   id?: string
   email: string
   companyName: string
+  erpnextCompany?: string | null
   plan: string
   status?: string
   twocoOrderId?: string | null
@@ -717,6 +809,8 @@ export type AccountUncheckedCreateWithoutAuditLogsInput = {
   users?: Prisma.UserUncheckedCreateNestedManyWithoutAccountInput
   subscriptions?: Prisma.SubscriptionUncheckedCreateNestedManyWithoutAccountInput
   apiKeys?: Prisma.ApiKeyUncheckedCreateNestedManyWithoutAccountInput
+  inviteTokens?: Prisma.InviteTokenUncheckedCreateNestedManyWithoutAccountInput
+  webhookEndpoints?: Prisma.WebhookEndpointUncheckedCreateNestedManyWithoutAccountInput
 }
 
 export type AccountCreateOrConnectWithoutAuditLogsInput = {
@@ -739,6 +833,7 @@ export type AccountUpdateWithoutAuditLogsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   companyName?: Prisma.StringFieldUpdateOperationsInput | string
+  erpnextCompany?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   twocoOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -749,12 +844,15 @@ export type AccountUpdateWithoutAuditLogsInput = {
   users?: Prisma.UserUpdateManyWithoutAccountNestedInput
   subscriptions?: Prisma.SubscriptionUpdateManyWithoutAccountNestedInput
   apiKeys?: Prisma.ApiKeyUpdateManyWithoutAccountNestedInput
+  inviteTokens?: Prisma.InviteTokenUpdateManyWithoutAccountNestedInput
+  webhookEndpoints?: Prisma.WebhookEndpointUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountUncheckedUpdateWithoutAuditLogsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   companyName?: Prisma.StringFieldUpdateOperationsInput | string
+  erpnextCompany?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   twocoOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -765,12 +863,15 @@ export type AccountUncheckedUpdateWithoutAuditLogsInput = {
   users?: Prisma.UserUncheckedUpdateManyWithoutAccountNestedInput
   subscriptions?: Prisma.SubscriptionUncheckedUpdateManyWithoutAccountNestedInput
   apiKeys?: Prisma.ApiKeyUncheckedUpdateManyWithoutAccountNestedInput
+  inviteTokens?: Prisma.InviteTokenUncheckedUpdateManyWithoutAccountNestedInput
+  webhookEndpoints?: Prisma.WebhookEndpointUncheckedUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountCreateWithoutApiKeysInput = {
   id?: string
   email: string
   companyName: string
+  erpnextCompany?: string | null
   plan: string
   status?: string
   twocoOrderId?: string | null
@@ -781,12 +882,15 @@ export type AccountCreateWithoutApiKeysInput = {
   users?: Prisma.UserCreateNestedManyWithoutAccountInput
   subscriptions?: Prisma.SubscriptionCreateNestedManyWithoutAccountInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutAccountInput
+  inviteTokens?: Prisma.InviteTokenCreateNestedManyWithoutAccountInput
+  webhookEndpoints?: Prisma.WebhookEndpointCreateNestedManyWithoutAccountInput
 }
 
 export type AccountUncheckedCreateWithoutApiKeysInput = {
   id?: string
   email: string
   companyName: string
+  erpnextCompany?: string | null
   plan: string
   status?: string
   twocoOrderId?: string | null
@@ -797,6 +901,8 @@ export type AccountUncheckedCreateWithoutApiKeysInput = {
   users?: Prisma.UserUncheckedCreateNestedManyWithoutAccountInput
   subscriptions?: Prisma.SubscriptionUncheckedCreateNestedManyWithoutAccountInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutAccountInput
+  inviteTokens?: Prisma.InviteTokenUncheckedCreateNestedManyWithoutAccountInput
+  webhookEndpoints?: Prisma.WebhookEndpointUncheckedCreateNestedManyWithoutAccountInput
 }
 
 export type AccountCreateOrConnectWithoutApiKeysInput = {
@@ -819,6 +925,7 @@ export type AccountUpdateWithoutApiKeysInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   companyName?: Prisma.StringFieldUpdateOperationsInput | string
+  erpnextCompany?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   twocoOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -829,12 +936,15 @@ export type AccountUpdateWithoutApiKeysInput = {
   users?: Prisma.UserUpdateManyWithoutAccountNestedInput
   subscriptions?: Prisma.SubscriptionUpdateManyWithoutAccountNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutAccountNestedInput
+  inviteTokens?: Prisma.InviteTokenUpdateManyWithoutAccountNestedInput
+  webhookEndpoints?: Prisma.WebhookEndpointUpdateManyWithoutAccountNestedInput
 }
 
 export type AccountUncheckedUpdateWithoutApiKeysInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   companyName?: Prisma.StringFieldUpdateOperationsInput | string
+  erpnextCompany?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   twocoOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -845,6 +955,192 @@ export type AccountUncheckedUpdateWithoutApiKeysInput = {
   users?: Prisma.UserUncheckedUpdateManyWithoutAccountNestedInput
   subscriptions?: Prisma.SubscriptionUncheckedUpdateManyWithoutAccountNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutAccountNestedInput
+  inviteTokens?: Prisma.InviteTokenUncheckedUpdateManyWithoutAccountNestedInput
+  webhookEndpoints?: Prisma.WebhookEndpointUncheckedUpdateManyWithoutAccountNestedInput
+}
+
+export type AccountCreateWithoutInviteTokensInput = {
+  id?: string
+  email: string
+  companyName: string
+  erpnextCompany?: string | null
+  plan: string
+  status?: string
+  twocoOrderId?: string | null
+  twocoCustomerId?: string | null
+  modulesSelected?: Prisma.AccountCreatemodulesSelectedInput | string[]
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  users?: Prisma.UserCreateNestedManyWithoutAccountInput
+  subscriptions?: Prisma.SubscriptionCreateNestedManyWithoutAccountInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutAccountInput
+  apiKeys?: Prisma.ApiKeyCreateNestedManyWithoutAccountInput
+  webhookEndpoints?: Prisma.WebhookEndpointCreateNestedManyWithoutAccountInput
+}
+
+export type AccountUncheckedCreateWithoutInviteTokensInput = {
+  id?: string
+  email: string
+  companyName: string
+  erpnextCompany?: string | null
+  plan: string
+  status?: string
+  twocoOrderId?: string | null
+  twocoCustomerId?: string | null
+  modulesSelected?: Prisma.AccountCreatemodulesSelectedInput | string[]
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  users?: Prisma.UserUncheckedCreateNestedManyWithoutAccountInput
+  subscriptions?: Prisma.SubscriptionUncheckedCreateNestedManyWithoutAccountInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutAccountInput
+  apiKeys?: Prisma.ApiKeyUncheckedCreateNestedManyWithoutAccountInput
+  webhookEndpoints?: Prisma.WebhookEndpointUncheckedCreateNestedManyWithoutAccountInput
+}
+
+export type AccountCreateOrConnectWithoutInviteTokensInput = {
+  where: Prisma.AccountWhereUniqueInput
+  create: Prisma.XOR<Prisma.AccountCreateWithoutInviteTokensInput, Prisma.AccountUncheckedCreateWithoutInviteTokensInput>
+}
+
+export type AccountUpsertWithoutInviteTokensInput = {
+  update: Prisma.XOR<Prisma.AccountUpdateWithoutInviteTokensInput, Prisma.AccountUncheckedUpdateWithoutInviteTokensInput>
+  create: Prisma.XOR<Prisma.AccountCreateWithoutInviteTokensInput, Prisma.AccountUncheckedCreateWithoutInviteTokensInput>
+  where?: Prisma.AccountWhereInput
+}
+
+export type AccountUpdateToOneWithWhereWithoutInviteTokensInput = {
+  where?: Prisma.AccountWhereInput
+  data: Prisma.XOR<Prisma.AccountUpdateWithoutInviteTokensInput, Prisma.AccountUncheckedUpdateWithoutInviteTokensInput>
+}
+
+export type AccountUpdateWithoutInviteTokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  companyName?: Prisma.StringFieldUpdateOperationsInput | string
+  erpnextCompany?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plan?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  twocoOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twocoCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modulesSelected?: Prisma.AccountUpdatemodulesSelectedInput | string[]
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.UserUpdateManyWithoutAccountNestedInput
+  subscriptions?: Prisma.SubscriptionUpdateManyWithoutAccountNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutAccountNestedInput
+  apiKeys?: Prisma.ApiKeyUpdateManyWithoutAccountNestedInput
+  webhookEndpoints?: Prisma.WebhookEndpointUpdateManyWithoutAccountNestedInput
+}
+
+export type AccountUncheckedUpdateWithoutInviteTokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  companyName?: Prisma.StringFieldUpdateOperationsInput | string
+  erpnextCompany?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plan?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  twocoOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twocoCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modulesSelected?: Prisma.AccountUpdatemodulesSelectedInput | string[]
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.UserUncheckedUpdateManyWithoutAccountNestedInput
+  subscriptions?: Prisma.SubscriptionUncheckedUpdateManyWithoutAccountNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutAccountNestedInput
+  apiKeys?: Prisma.ApiKeyUncheckedUpdateManyWithoutAccountNestedInput
+  webhookEndpoints?: Prisma.WebhookEndpointUncheckedUpdateManyWithoutAccountNestedInput
+}
+
+export type AccountCreateWithoutWebhookEndpointsInput = {
+  id?: string
+  email: string
+  companyName: string
+  erpnextCompany?: string | null
+  plan: string
+  status?: string
+  twocoOrderId?: string | null
+  twocoCustomerId?: string | null
+  modulesSelected?: Prisma.AccountCreatemodulesSelectedInput | string[]
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  users?: Prisma.UserCreateNestedManyWithoutAccountInput
+  subscriptions?: Prisma.SubscriptionCreateNestedManyWithoutAccountInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutAccountInput
+  apiKeys?: Prisma.ApiKeyCreateNestedManyWithoutAccountInput
+  inviteTokens?: Prisma.InviteTokenCreateNestedManyWithoutAccountInput
+}
+
+export type AccountUncheckedCreateWithoutWebhookEndpointsInput = {
+  id?: string
+  email: string
+  companyName: string
+  erpnextCompany?: string | null
+  plan: string
+  status?: string
+  twocoOrderId?: string | null
+  twocoCustomerId?: string | null
+  modulesSelected?: Prisma.AccountCreatemodulesSelectedInput | string[]
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  users?: Prisma.UserUncheckedCreateNestedManyWithoutAccountInput
+  subscriptions?: Prisma.SubscriptionUncheckedCreateNestedManyWithoutAccountInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutAccountInput
+  apiKeys?: Prisma.ApiKeyUncheckedCreateNestedManyWithoutAccountInput
+  inviteTokens?: Prisma.InviteTokenUncheckedCreateNestedManyWithoutAccountInput
+}
+
+export type AccountCreateOrConnectWithoutWebhookEndpointsInput = {
+  where: Prisma.AccountWhereUniqueInput
+  create: Prisma.XOR<Prisma.AccountCreateWithoutWebhookEndpointsInput, Prisma.AccountUncheckedCreateWithoutWebhookEndpointsInput>
+}
+
+export type AccountUpsertWithoutWebhookEndpointsInput = {
+  update: Prisma.XOR<Prisma.AccountUpdateWithoutWebhookEndpointsInput, Prisma.AccountUncheckedUpdateWithoutWebhookEndpointsInput>
+  create: Prisma.XOR<Prisma.AccountCreateWithoutWebhookEndpointsInput, Prisma.AccountUncheckedCreateWithoutWebhookEndpointsInput>
+  where?: Prisma.AccountWhereInput
+}
+
+export type AccountUpdateToOneWithWhereWithoutWebhookEndpointsInput = {
+  where?: Prisma.AccountWhereInput
+  data: Prisma.XOR<Prisma.AccountUpdateWithoutWebhookEndpointsInput, Prisma.AccountUncheckedUpdateWithoutWebhookEndpointsInput>
+}
+
+export type AccountUpdateWithoutWebhookEndpointsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  companyName?: Prisma.StringFieldUpdateOperationsInput | string
+  erpnextCompany?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plan?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  twocoOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twocoCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modulesSelected?: Prisma.AccountUpdatemodulesSelectedInput | string[]
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.UserUpdateManyWithoutAccountNestedInput
+  subscriptions?: Prisma.SubscriptionUpdateManyWithoutAccountNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutAccountNestedInput
+  apiKeys?: Prisma.ApiKeyUpdateManyWithoutAccountNestedInput
+  inviteTokens?: Prisma.InviteTokenUpdateManyWithoutAccountNestedInput
+}
+
+export type AccountUncheckedUpdateWithoutWebhookEndpointsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  companyName?: Prisma.StringFieldUpdateOperationsInput | string
+  erpnextCompany?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plan?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  twocoOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twocoCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modulesSelected?: Prisma.AccountUpdatemodulesSelectedInput | string[]
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.UserUncheckedUpdateManyWithoutAccountNestedInput
+  subscriptions?: Prisma.SubscriptionUncheckedUpdateManyWithoutAccountNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutAccountNestedInput
+  apiKeys?: Prisma.ApiKeyUncheckedUpdateManyWithoutAccountNestedInput
+  inviteTokens?: Prisma.InviteTokenUncheckedUpdateManyWithoutAccountNestedInput
 }
 
 
@@ -857,6 +1153,8 @@ export type AccountCountOutputType = {
   subscriptions: number
   auditLogs: number
   apiKeys: number
+  inviteTokens: number
+  webhookEndpoints: number
 }
 
 export type AccountCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -864,6 +1162,8 @@ export type AccountCountOutputTypeSelect<ExtArgs extends runtime.Types.Extension
   subscriptions?: boolean | AccountCountOutputTypeCountSubscriptionsArgs
   auditLogs?: boolean | AccountCountOutputTypeCountAuditLogsArgs
   apiKeys?: boolean | AccountCountOutputTypeCountApiKeysArgs
+  inviteTokens?: boolean | AccountCountOutputTypeCountInviteTokensArgs
+  webhookEndpoints?: boolean | AccountCountOutputTypeCountWebhookEndpointsArgs
 }
 
 /**
@@ -904,11 +1204,26 @@ export type AccountCountOutputTypeCountApiKeysArgs<ExtArgs extends runtime.Types
   where?: Prisma.ApiKeyWhereInput
 }
 
+/**
+ * AccountCountOutputType without action
+ */
+export type AccountCountOutputTypeCountInviteTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.InviteTokenWhereInput
+}
+
+/**
+ * AccountCountOutputType without action
+ */
+export type AccountCountOutputTypeCountWebhookEndpointsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.WebhookEndpointWhereInput
+}
+
 
 export type AccountSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   email?: boolean
   companyName?: boolean
+  erpnextCompany?: boolean
   plan?: boolean
   status?: boolean
   twocoOrderId?: boolean
@@ -920,6 +1235,8 @@ export type AccountSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   subscriptions?: boolean | Prisma.Account$subscriptionsArgs<ExtArgs>
   auditLogs?: boolean | Prisma.Account$auditLogsArgs<ExtArgs>
   apiKeys?: boolean | Prisma.Account$apiKeysArgs<ExtArgs>
+  inviteTokens?: boolean | Prisma.Account$inviteTokensArgs<ExtArgs>
+  webhookEndpoints?: boolean | Prisma.Account$webhookEndpointsArgs<ExtArgs>
   _count?: boolean | Prisma.AccountCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["account"]>
 
@@ -927,6 +1244,7 @@ export type AccountSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   id?: boolean
   email?: boolean
   companyName?: boolean
+  erpnextCompany?: boolean
   plan?: boolean
   status?: boolean
   twocoOrderId?: boolean
@@ -940,6 +1258,7 @@ export type AccountSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   id?: boolean
   email?: boolean
   companyName?: boolean
+  erpnextCompany?: boolean
   plan?: boolean
   status?: boolean
   twocoOrderId?: boolean
@@ -953,6 +1272,7 @@ export type AccountSelectScalar = {
   id?: boolean
   email?: boolean
   companyName?: boolean
+  erpnextCompany?: boolean
   plan?: boolean
   status?: boolean
   twocoOrderId?: boolean
@@ -962,12 +1282,14 @@ export type AccountSelectScalar = {
   updatedAt?: boolean
 }
 
-export type AccountOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "companyName" | "plan" | "status" | "twocoOrderId" | "twocoCustomerId" | "modulesSelected" | "createdAt" | "updatedAt", ExtArgs["result"]["account"]>
+export type AccountOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "companyName" | "erpnextCompany" | "plan" | "status" | "twocoOrderId" | "twocoCustomerId" | "modulesSelected" | "createdAt" | "updatedAt", ExtArgs["result"]["account"]>
 export type AccountInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   users?: boolean | Prisma.Account$usersArgs<ExtArgs>
   subscriptions?: boolean | Prisma.Account$subscriptionsArgs<ExtArgs>
   auditLogs?: boolean | Prisma.Account$auditLogsArgs<ExtArgs>
   apiKeys?: boolean | Prisma.Account$apiKeysArgs<ExtArgs>
+  inviteTokens?: boolean | Prisma.Account$inviteTokensArgs<ExtArgs>
+  webhookEndpoints?: boolean | Prisma.Account$webhookEndpointsArgs<ExtArgs>
   _count?: boolean | Prisma.AccountCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type AccountIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -980,11 +1302,14 @@ export type $AccountPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     subscriptions: Prisma.$SubscriptionPayload<ExtArgs>[]
     auditLogs: Prisma.$AuditLogPayload<ExtArgs>[]
     apiKeys: Prisma.$ApiKeyPayload<ExtArgs>[]
+    inviteTokens: Prisma.$InviteTokenPayload<ExtArgs>[]
+    webhookEndpoints: Prisma.$WebhookEndpointPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     email: string
     companyName: string
+    erpnextCompany: string | null
     plan: string
     status: string
     twocoOrderId: string | null
@@ -1390,6 +1715,8 @@ export interface Prisma__AccountClient<T, Null = never, ExtArgs extends runtime.
   subscriptions<T extends Prisma.Account$subscriptionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Account$subscriptionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SubscriptionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   auditLogs<T extends Prisma.Account$auditLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Account$auditLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   apiKeys<T extends Prisma.Account$apiKeysArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Account$apiKeysArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ApiKeyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  inviteTokens<T extends Prisma.Account$inviteTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Account$inviteTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InviteTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  webhookEndpoints<T extends Prisma.Account$webhookEndpointsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Account$webhookEndpointsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WebhookEndpointPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1422,6 +1749,7 @@ export interface AccountFieldRefs {
   readonly id: Prisma.FieldRef<"Account", 'String'>
   readonly email: Prisma.FieldRef<"Account", 'String'>
   readonly companyName: Prisma.FieldRef<"Account", 'String'>
+  readonly erpnextCompany: Prisma.FieldRef<"Account", 'String'>
   readonly plan: Prisma.FieldRef<"Account", 'String'>
   readonly status: Prisma.FieldRef<"Account", 'String'>
   readonly twocoOrderId: Prisma.FieldRef<"Account", 'String'>
@@ -1910,6 +2238,54 @@ export type Account$apiKeysArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   distinct?: Prisma.ApiKeyScalarFieldEnum | Prisma.ApiKeyScalarFieldEnum[]
+}
+
+/**
+ * Account.inviteTokens
+ */
+export type Account$inviteTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the InviteToken
+   */
+  select?: Prisma.InviteTokenSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the InviteToken
+   */
+  omit?: Prisma.InviteTokenOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InviteTokenInclude<ExtArgs> | null
+  where?: Prisma.InviteTokenWhereInput
+  orderBy?: Prisma.InviteTokenOrderByWithRelationInput | Prisma.InviteTokenOrderByWithRelationInput[]
+  cursor?: Prisma.InviteTokenWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.InviteTokenScalarFieldEnum | Prisma.InviteTokenScalarFieldEnum[]
+}
+
+/**
+ * Account.webhookEndpoints
+ */
+export type Account$webhookEndpointsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the WebhookEndpoint
+   */
+  select?: Prisma.WebhookEndpointSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the WebhookEndpoint
+   */
+  omit?: Prisma.WebhookEndpointOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WebhookEndpointInclude<ExtArgs> | null
+  where?: Prisma.WebhookEndpointWhereInput
+  orderBy?: Prisma.WebhookEndpointOrderByWithRelationInput | Prisma.WebhookEndpointOrderByWithRelationInput[]
+  cursor?: Prisma.WebhookEndpointWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.WebhookEndpointScalarFieldEnum | Prisma.WebhookEndpointScalarFieldEnum[]
 }
 
 /**

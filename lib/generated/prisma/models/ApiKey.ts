@@ -425,10 +425,6 @@ export type ApiKeyUncheckedUpdateManyWithoutAccountNestedInput = {
   deleteMany?: Prisma.ApiKeyScalarWhereInput | Prisma.ApiKeyScalarWhereInput[]
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type ApiKeyCreateWithoutAccountInput = {
   id?: string
   keyHash: string

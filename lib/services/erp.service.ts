@@ -12,17 +12,17 @@ import {
 import type { Result } from "@/lib/utils/result";
 
 /**
- * List ERP documents. When accountId is present (multi-tenant), the data layer
- * should scope results to that account's company/site (row-level security).
+ * List ERP documents. erpnextCompany scopes results to that company (row-level security).
  */
 export async function list(
   doctype: string,
   sessionId: string,
   params?: ListParams,
-  accountId?: string
+  accountId?: string,
+  erpnextCompany?: string | null
 ): Promise<Result<unknown[], string>> {
   if (!doctype?.trim()) return { ok: false, error: "doctype required" };
-  return erpList(doctype, sessionId, params, accountId);
+  return erpList(doctype, sessionId, params, accountId, erpnextCompany);
 }
 
 export async function getDoc(

@@ -1,5 +1,21 @@
 "use client";
 
+/**
+ * Accounting / GL overview page.
+ *
+ * NOTE: this is one of the original pages from the v0.4 sprint and hasn't been
+ * refactored to the current component patterns yet. Specifically:
+ *   - still uses raw fetch() instead of useErpList()
+ *   - summary cards are inline JSX rather than using the shared MetricCard component
+ *   - no error boundary — a failed ERP fetch shows a generic message with no retry UI
+ *
+ * It works and we're not breaking anything, but if you're adding a feature here
+ * please migrate it to the new patterns at the same time. See CONTRIBUTING.md §4.
+ *
+ * TODO: also needs a "Reconciliation" section once we wire up the GL entry endpoints.
+ *       Currently blocked on ERPNext permission scoping for Journal Entry doctype.
+ */
+
 import { useState, useCallback, useEffect } from "react";
 import {
   BarChart,
@@ -12,12 +28,13 @@ import {
   CartesianGrid,
 } from "recharts";
 import { Calculator } from "lucide-react";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonCard, SkeletonChart } from "@/components/ui/Skeleton";
 import { MODULE_EMPTY_STATES, EMPTY_STATE_SUPPORT_LINE } from "@/lib/dashboard/empty-state-config";
 import { formatCurrency } from "@/lib/locale/currency";
+import { AIChatPanel } from "@/components/ai/AIChatPanel";
 
 /* ------------------------------------------------------------------ */
 /*  Static data (replace with API call in production)                  */
@@ -60,23 +77,14 @@ function MetricCard({
   variant?: "default" | "success";
 }) {
   return (
-    <div
-      className="rounded-xl border p-6"
-      style={{
-        borderColor: "var(--color-border)",
-        background: "var(--color-ground-elevated)",
-      }}
-    >
-      <p className="text-sm" style={{ color: "var(--color-ink-tertiary)" }}>
-        {label}
-      </p>
-      <p
-        className="mt-1 text-2xl font-semibold"
-        style={{
-          color: variant === "success" ? "var(--color-success)" : "var(--color-ink)",
-        }}
-      >
-        {formatCurrency(value, "USD")}
+    <div className="rounded-xl border border-border bg-card p-6">
+      <p className="text-sm text-muted-foreground/60">{label}</p>
+      <p className="mt-1 text-2xl font-semibold text-foreground">
+        {variant === "success" ? (
+          <span className="text-emerald-500">{formatCurrency(value, "USD")}</span>
+        ) : (
+          formatCurrency(value, "USD")
+        )}
       </p>
     </div>
   );
@@ -97,23 +105,15 @@ function ChartTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div
-      className="rounded-lg border px-3 py-2 text-xs shadow-lg"
-      style={{
-        background: "var(--color-ground-elevated)",
-        borderColor: "var(--color-border)",
-      }}
-    >
-      <p className="mb-1 font-medium" style={{ color: "var(--color-ink)" }}>
-        {label}
-      </p>
+    <div className="rounded-lg border border-border bg-card px-3 py-2 text-xs shadow-lg">
+      <p className="mb-1 font-medium text-foreground">{label}</p>
       {payload.map((entry) => (
         <div key={entry.name} className="flex items-center gap-2">
           <span
             className="inline-block h-2 w-2 rounded-full"
             style={{ background: entry.color }}
           />
-          <span style={{ color: "var(--color-ink-secondary)" }}>
+          <span className="text-muted-foreground">
             {entry.name}: {formatCurrency(entry.value * 1_000_000, "USD")}
           </span>
         </div>
@@ -166,24 +166,33 @@ export default function AccountingPage() {
     setTimeout(() => setState("success"), 800);
   }, []);
 
+  const header = (
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Accounting</h1>
+        <p className="text-sm text-muted-foreground">General ledger and financial overview</p>
+      </div>
+      <Button variant="primary">+ Create New</Button>
+    </div>
+  );
+
   /* ---------- Empty state (no chart of accounts) ---------- */
   if (state === "empty") {
     return (
-      <div>
-        <PageHeader title="Accounting" description="General ledger and financial overview" />
-        <div
-          className="mt-6 rounded-[var(--radius-md)] border"
-          style={{ borderColor: "var(--color-border)" }}
-        >
-          <EmptyState
-            icon={<Calculator className="h-6 w-6" />}
-            title={MODULE_EMPTY_STATES.accounting.title}
-            description={MODULE_EMPTY_STATES.accounting.description}
-            actionLabel={MODULE_EMPTY_STATES.accounting.actionLabel}
-            actionHref={MODULE_EMPTY_STATES.accounting.actionLink}
-            supportLine={EMPTY_STATE_SUPPORT_LINE}
-          />
-        </div>
+      <div className="space-y-6">
+        {header}
+        <Card>
+          <CardContent className="p-0">
+            <EmptyState
+              icon={<Calculator className="h-6 w-6" />}
+              title={MODULE_EMPTY_STATES.accounting.title}
+              description={MODULE_EMPTY_STATES.accounting.description}
+              actionLabel={MODULE_EMPTY_STATES.accounting.actionLabel}
+              actionHref={MODULE_EMPTY_STATES.accounting.actionLink}
+              supportLine={EMPTY_STATE_SUPPORT_LINE}
+            />
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -191,22 +200,23 @@ export default function AccountingPage() {
   /* ---------- Loading state ---------- */
   if (state === "loading") {
     return (
-      <div>
-        <PageHeader
-          title="Accounting"
-          description="General ledger and financial overview"
-        />
-        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="space-y-6">
+        {header}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <SkeletonCard />
           <SkeletonCard />
           <SkeletonCard />
         </div>
-        <div className="mt-8">
-          <SkeletonChart height={256} />
-        </div>
-        <div className="mt-8">
-          <SkeletonChart height={180} />
-        </div>
+        <Card>
+          <CardContent className="p-6">
+            <SkeletonChart height={256} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <SkeletonChart height={180} />
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -214,50 +224,27 @@ export default function AccountingPage() {
   /* ---------- Error state ---------- */
   if (state === "error") {
     return (
-      <div>
-        <PageHeader
-          title="Accounting"
-          description="General ledger and financial overview"
-        />
-        <div
-          className="mt-6 rounded-xl border p-6 text-center"
-          style={{
-            borderColor: "var(--color-border)",
-            background: "var(--color-ground-elevated)",
-          }}
-        >
-          <div
-            className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl"
-            style={{ background: "rgb(239 68 68 / 0.1)", color: "var(--color-error)" }}
-          >
-            <Calculator className="h-6 w-6" />
-          </div>
-          <p className="text-sm font-medium" style={{ color: "var(--color-ink)" }}>
-            Something went wrong
-          </p>
-          <p className="mt-1 text-sm" style={{ color: "var(--color-ink-tertiary)" }}>
-            {errorMessage ?? "Failed to load accounting data."}
-          </p>
-          <div className="mt-4">
-            <Button variant="primary" size="sm" onClick={retry}>
-              Retry
-            </Button>
-          </div>
-        </div>
+      <div className="space-y-6">
+        {header}
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
+              <Calculator className="h-6 w-6" />
+            </div>
+            <p className="text-sm font-medium text-foreground">Something went wrong</p>
+            <p className="mt-1 text-sm text-muted-foreground">{errorMessage ?? "Failed to load accounting data."}</p>
+            <Button variant="primary" size="sm" className="mt-4" onClick={retry}>Retry</Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   /* ---------- Success state ---------- */
   return (
-    <div>
-      <PageHeader
-        title="Accounting"
-        description="General ledger and financial overview"
-      />
-
-      {/* Metric cards */}
-      <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+    <div className="space-y-6">
+      {header}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {metrics.map((m) => (
           <MetricCard
             key={m.label}
@@ -267,19 +254,12 @@ export default function AccountingPage() {
           />
         ))}
       </div>
-
-      {/* Revenue vs Expenses chart */}
-      <div
-        className="mt-8 rounded-xl border p-6"
-        style={{
-          borderColor: "var(--color-border)",
-          background: "var(--color-ground-elevated)",
-        }}
-      >
-        <p className="text-base font-semibold" style={{ color: "var(--color-ink)" }}>
+      <Card>
+        <CardContent className="p-6">
+        <p className="text-base font-semibold text-foreground">
           Revenue vs Expenses
         </p>
-        <p className="text-sm" style={{ color: "var(--color-ink-tertiary)" }}>
+        <p className="text-sm text-muted-foreground/60">
           Monthly (Sep &ndash; Feb)
         </p>
         <div className="mt-4 h-64 min-h-[256px] w-full">
@@ -290,14 +270,14 @@ export default function AccountingPage() {
             >
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="var(--color-border)"
+                stroke="hsl(var(--border))"
                 vertical={false}
               />
               <XAxis
                 dataKey="month"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 12, fill: "var(--color-ink-tertiary)" }}
+                tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground) / 0.6)" }}
               />
               <YAxis
                 hide
@@ -305,70 +285,56 @@ export default function AccountingPage() {
               />
               <Tooltip
                 content={<ChartTooltip />}
-                cursor={{ fill: "var(--color-ground-muted)" }}
+                cursor={{ fill: "hsl(var(--muted))" }}
               />
               <Legend
-                wrapperStyle={{ color: "var(--color-ink-secondary)", fontSize: 12 }}
+                wrapperStyle={{ color: "hsl(var(--muted-foreground))", fontSize: 12 }}
               />
               <Bar
                 dataKey="revenue"
                 name="Revenue"
-                fill="var(--color-accent)"
+                fill="hsl(var(--primary))"
                 radius={[2, 2, 0, 0]}
               />
               <Bar
                 dataKey="expenses"
                 name="Expenses"
-                fill="var(--color-border)"
+                fill="hsl(var(--border))"
                 radius={[2, 2, 0, 0]}
               />
             </BarChart>
           </ResponsiveContainer>
         </div>
-      </div>
-
-      {/* Accounts Receivable Aging */}
-      <div
-        className="mt-8 rounded-xl border p-6"
-        style={{
-          borderColor: "var(--color-border)",
-          background: "var(--color-ground-elevated)",
-        }}
-      >
-        <p className="text-base font-semibold" style={{ color: "var(--color-ink)" }}>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="p-6">
+        <p className="text-base font-semibold text-foreground">
           Accounts Receivable Aging
         </p>
         <div className="mt-4 space-y-3">
           {aging.map((row) => (
             <div key={row.label} className="flex items-center gap-4">
-              <span
-                className="w-24 text-sm"
-                style={{ color: "var(--color-ink-secondary)" }}
-              >
+              <span className="w-24 text-sm text-muted-foreground">
                 {row.label}
               </span>
-              <div
-                className="h-2 flex-1 overflow-hidden rounded-full"
-                style={{ background: "var(--color-ground-muted)" }}
-              >
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full rounded-full"
+                  className="h-full rounded-full bg-primary"
                   style={{
                     width: `${(row.amount / row.total) * 100}%`,
-                    background: "var(--color-accent)",
                   }}
                 />
               </div>
-              <span
-                className="w-24 text-right text-sm font-medium"
-                style={{ color: "var(--color-ink)" }}
-              >
+              <span className="w-24 text-right text-sm font-medium text-foreground">
                 {formatCurrency(row.amount * 1_000_000, "USD")}
               </span>
             </div>
           ))}
         </div>
-      </div>
+        </CardContent>
+      </Card>
+      <AIChatPanel module="finance" />
     </div>
   );
 }

@@ -1,56 +1,50 @@
 "use client";
 
-import { forwardRef, useId, type InputHTMLAttributes } from "react";
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
 
-export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label: string;
+export interface InputProps extends Omit<React.ComponentProps<"input">, "size"> {
+  label?: string;
   error?: string;
-  helperText?: string;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, helperText, id, className = "", ...props }, ref) => {
-    const generatedId = useId();
-    const inputId = id ?? `input-${generatedId.replace(/:/g, "")}`;
-    return (
-      <div className="w-full">
-        <label
-          htmlFor={inputId}
-          className="mb-1.5 block text-[var(--font-label)] font-medium text-[var(--color-ink-secondary)]"
-          style={{ fontSize: "var(--font-label)" }}
-        >
-          {label}
-        </label>
-        <input
-          ref={ref}
-          id={inputId}
-          aria-invalid={!!error}
-          aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
-          className={[
-            "h-12 w-full rounded-[var(--radius-sm)] px-4 text-[0.9375rem] transition-[border-color,box-shadow] duration-150",
-            "bg-[var(--color-input-bg)] border text-[var(--color-ink)]",
-            "placeholder:text-[var(--color-ink-muted)]",
-            "hover:border-[var(--color-ink-muted)]",
-            "focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 focus:ring-offset-[var(--color-ground)]",
-            error
-              ? "border-[var(--color-error)] focus:border-[var(--color-error)]"
-              : "border-[var(--color-border)] focus:border-[var(--color-primary)]",
-            className,
-          ].filter(Boolean).join(" ")}
-          {...props}
-        />
-        {error && (
-          <p id={`${inputId}-error`} className="mt-1.5 text-sm text-[var(--color-error)]" role="alert">
-            {error}
-          </p>
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, label, error, id: idProp, ...props }, ref) => {
+    const generatedId = React.useId();
+    const inputId = idProp ?? generatedId;
+    const input = (
+      <input
+        id={inputId}
+        type={type}
+        className={cn(
+          "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+          error && "border-destructive",
+          className
         )}
-        {helperText && !error && (
-          <p id={`${inputId}-helper`} className="mt-1.5 text-[var(--font-caption)] text-[var(--color-ink-tertiary)]">
-            {helperText}
-          </p>
-        )}
-      </div>
+        ref={ref}
+        aria-invalid={!!error}
+        {...props}
+      />
     );
+    if (label != null || error != null) {
+      return (
+        <div className="w-full space-y-2">
+          {label != null && (
+            <Label htmlFor={inputId}>
+              {label}
+            </Label>
+          )}
+          {input}
+          {error != null && (
+            <p className="text-sm text-destructive" role="alert">{error}</p>
+          )}
+        </div>
+      );
+    }
+    return input;
   }
 );
 Input.displayName = "Input";
+
+export { Input };

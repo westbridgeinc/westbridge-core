@@ -1,8 +1,10 @@
 import { createHash, randomBytes, timingSafeEqual } from "crypto";
+import { COOKIE } from "@/lib/constants";
 
-const CSRF_COOKIE = "westbridge_csrf";
 const CSRF_HEADER = "x-csrf-token";
 const CSRF_MAX_AGE = 60 * 60; // 1 hour
+
+export const CSRF_COOKIE_NAME = COOKIE.CSRF_NAME;
 
 function getSecret(): string {
   const s = process.env.CSRF_SECRET;
@@ -42,13 +44,6 @@ export function verifyCsrfToken(token: string | null | undefined): boolean {
 }
 
 /**
- * Read CSRF token from request (header).
- */
-export function getCsrfTokenFromRequest(request: Request): string | null {
-  return request.headers.get(CSRF_HEADER) ?? request.headers.get(CSRF_HEADER.toLowerCase());
-}
-
-/**
  * Validate CSRF: token from header must match cookie and pass signature check.
  * Pass the cookie value from cookies().get(CSRF_COOKIE_NAME)?.value.
  */
@@ -58,6 +53,5 @@ export function validateCsrf(headerToken: string | null, cookieToken: string | n
   return verifyCsrfToken(headerToken);
 }
 
-export const CSRF_COOKIE_NAME = CSRF_COOKIE;
 export const CSRF_HEADER_NAME = CSRF_HEADER;
 export const CSRF_MAX_AGE_SECONDS = CSRF_MAX_AGE;

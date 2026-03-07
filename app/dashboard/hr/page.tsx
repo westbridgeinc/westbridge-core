@@ -3,14 +3,15 @@
 import { useState, useEffect, useMemo } from "react";
 import { UserCog } from "lucide-react";
 import { MODULE_EMPTY_STATES, EMPTY_STATE_SUPPORT_LINE } from "@/lib/dashboard/empty-state-config";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { MetricCard } from "@/components/dashboard/MetricCard";
+import { Card, CardContent } from "@/components/ui/Card";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { SkeletonTable } from "@/components/ui/SkeletonTable";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDate } from "@/lib/locale/date";
+import { AIChatPanel } from "@/components/ai/AIChatPanel";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -60,9 +61,7 @@ const columns: Column<Employee>[] = [
     id: "name",
     header: "Name",
     accessor: (row) => (
-      <span className="font-medium" style={{ color: "var(--color-ink)" }}>
-        {row.name}
-      </span>
+      <span className="font-medium text-foreground">{row.name}</span>
     ),
     sortValue: (row) => row.name,
   },
@@ -70,7 +69,7 @@ const columns: Column<Employee>[] = [
     id: "designation",
     header: "Designation",
     accessor: (row) => (
-      <span style={{ color: "var(--color-ink-secondary)" }}>{row.designation}</span>
+      <span className="text-muted-foreground">{row.designation}</span>
     ),
     sortValue: (row) => row.designation,
   },
@@ -78,7 +77,7 @@ const columns: Column<Employee>[] = [
     id: "department",
     header: "Department",
     accessor: (row) => (
-      <span style={{ color: "var(--color-ink-secondary)" }}>{row.department}</span>
+      <span className="text-muted-foreground">{row.department}</span>
     ),
     sortValue: (row) => row.department,
   },
@@ -92,7 +91,7 @@ const columns: Column<Employee>[] = [
     id: "dateJoined",
     header: "Date Joined",
     accessor: (row) => (
-      <span style={{ color: "var(--color-ink-tertiary)" }}>{formatDate(row.dateJoined)}</span>
+      <span className="text-muted-foreground/60">{formatDate(row.dateJoined)}</span>
     ),
     sortValue: (row) => row.dateJoined,
   },
@@ -132,25 +131,27 @@ export default function HRPage() {
 
   const stats = useMemo(() => deriveStats(employees), [employees]);
 
+  const header = (
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">HR</h1>
+        <p className="text-sm text-muted-foreground">Employee directory and management</p>
+      </div>
+      <Button variant="primary">+ Create New</Button>
+    </div>
+  );
+
   /* ---- Error state ---- */
   if (error) {
     return (
       <div className="space-y-6">
-        <PageHeader title="HR" description="Employee directory and management" />
-        <div
-          className="flex flex-col items-center gap-4 rounded-[var(--radius-md)] border px-6 py-16 text-center"
-          style={{
-            borderColor: "var(--color-border)",
-            background: "var(--color-ground-elevated)",
-          }}
-        >
-          <p className="text-body" style={{ color: "var(--color-ink-secondary)" }}>
-            {error}
-          </p>
-          <Button variant="secondary" size="sm" onClick={fetchEmployees}>
-            Retry
-          </Button>
-        </div>
+        {header}
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+            <p className="text-sm text-muted-foreground">{error}</p>
+            <Button variant="outline" size="sm" onClick={fetchEmployees}>Retry</Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -159,17 +160,17 @@ export default function HRPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <PageHeader title="HR" description="Employee directory and management" />
+        {header}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div
-              key={i}
-              className="card animate-pulse"
-              style={{ minHeight: 88 }}
-            />
+            <div key={i} className="min-h-[88px] rounded-xl border border-border bg-card p-6 animate-pulse" />
           ))}
         </div>
-        <SkeletonTable rows={8} columns={5} />
+        <Card>
+          <CardContent className="p-0">
+            <SkeletonTable rows={8} columns={5} />
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -177,17 +178,15 @@ export default function HRPage() {
   /* ---- Success / Empty states ---- */
   return (
     <div className="space-y-6">
-      <PageHeader title="HR" description="Employee directory and management" />
-
-      {/* Metric cards */}
+      {header}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <MetricCard label="Total Employees" value={stats.total} />
         <MetricCard label="Active" value={stats.active} subtextVariant="success" />
         <MetricCard label="Inactive" value={stats.inactive} subtextVariant="muted" />
       </div>
-
-      {/* Data table */}
-      <DataTable<Employee>
+      <Card>
+        <CardContent className="p-0">
+          <DataTable<Employee>
         columns={columns}
         data={employees}
         keyExtractor={(r) => r.id}
@@ -203,7 +202,10 @@ export default function HRPage() {
           />
         }
         pageSize={20}
-      />
+          />
+        </CardContent>
+      </Card>
+      <AIChatPanel module="hr" />
     </div>
   );
 }

@@ -47,8 +47,7 @@ export function Tabs({ items, activeId, defaultId, onChange, className = "" }: T
   return (
     <div
       role="tablist"
-      className={`flex gap-1 border-b ${className}`}
-      style={{ borderColor: "var(--color-border)" }}
+      className={`inline-flex h-9 items-center rounded-lg bg-muted p-1 ${className}`}
     >
       {items.map((tab, i) => {
         const isActive = tab.id === currentId;
@@ -62,18 +61,9 @@ export function Tabs({ items, activeId, defaultId, onChange, className = "" }: T
             tabIndex={isActive ? 0 : -1}
             onClick={() => handleSelect(tab.id)}
             onKeyDown={(e) => handleKeyDown(e, i)}
-            className="relative px-4 pb-3 pt-2 text-[0.9375rem] font-medium transition-colors duration-150"
-            style={{
-              color: isActive ? "var(--color-ink)" : "var(--color-ink-tertiary)",
-            }}
+            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-150 ${isActive ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
           >
             {tab.label}
-            {isActive && (
-              <span
-                className="absolute inset-x-0 bottom-0 h-0.5 rounded-full"
-                style={{ background: "var(--color-accent)" }}
-              />
-            )}
           </button>
         );
       })}

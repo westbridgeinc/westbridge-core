@@ -1,60 +1,47 @@
-"use client";
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "@/lib/utils";
 
-export type BadgeVariant = "success" | "warning" | "error" | "info" | "default";
+const badgeVariants = cva(
+  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  {
+    variants: {
+      variant: {
+        default: "border-transparent bg-primary text-primary-foreground shadow",
+        secondary: "border-transparent bg-secondary text-secondary-foreground",
+        destructive: "border-transparent bg-destructive text-destructive-foreground shadow",
+        outline: "text-foreground",
+        success: "border-transparent bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+        warning: "border-transparent bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+        error: "border-transparent bg-destructive text-destructive-foreground shadow",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+);
 
-const VARIANT_STYLES: Record<BadgeVariant, { bg: string; text: string; border: string }> = {
-  success: { bg: "rgb(34 197 94 / 0.12)", text: "var(--color-success)", border: "rgb(34 197 94 / 0.2)" },
-  warning: { bg: "rgb(245 158 11 / 0.12)", text: "var(--color-warning)", border: "rgb(245 158 11 / 0.2)" },
-  error: { bg: "rgb(239 68 68 / 0.12)", text: "var(--color-error)", border: "rgb(239 68 68 / 0.2)" },
-  info: { bg: "rgb(59 130 246 / 0.12)", text: "var(--color-info)", border: "rgb(59 130 246 / 0.2)" },
-  default: { bg: "var(--color-ground-muted)", text: "var(--color-ink-tertiary)", border: "var(--color-border-subtle)" },
-};
-
-/** Map common status strings to badge variants */
-const STATUS_MAP: Record<string, BadgeVariant> = {
+const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline" | "success"> = {
   Paid: "success",
   Active: "success",
-  Approved: "success",
-  Processed: "success",
-  Completed: "success",
-  Complete: "success",
-  Unpaid: "warning",
-  Pending: "warning",
-  Open: "warning",
-  "In Progress": "warning",
-  Overdue: "error",
-  Rejected: "error",
-  Cancelled: "error",
-  Expired: "error",
-  Sent: "info",
-  Submitted: "info",
-  Draft: "default",
-  Inactive: "default",
-  Closed: "default",
+  Submitted: "default",
+  Draft: "outline",
+  Overdue: "destructive",
+  Unpaid: "secondary",
+  Error: "destructive",
 };
 
-export interface BadgeProps {
-  children: React.ReactNode;
-  variant?: BadgeVariant;
-  /** Auto-detect variant from status string */
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof badgeVariants> {
+  /** Optional: map status string to variant (e.g. Paid -> success, Draft -> outline) */
   status?: string;
-  className?: string;
 }
 
-export function Badge({ children, variant, status, className = "" }: BadgeProps) {
-  const resolved = variant ?? STATUS_MAP[status ?? ""] ?? "default";
-  const styles = VARIANT_STYLES[resolved];
-
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium leading-5 ${className}`}
-      style={{
-        background: styles.bg,
-        color: styles.text,
-        border: `1px solid ${styles.border}`,
-      }}
-    >
-      {children}
-    </span>
-  );
+function Badge({ className, variant, status, ...props }: BadgeProps) {
+  const resolvedVariant = variant ?? (status ? (STATUS_VARIANT[status] ?? "secondary") : undefined);
+  return <div className={cn(badgeVariants({ variant: resolvedVariant }), className)} {...props} />;
 }
+
+export { Badge, badgeVariants };

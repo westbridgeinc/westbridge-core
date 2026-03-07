@@ -1,3 +1,4 @@
+export const revalidate = 3600; // 1 hour — marketing pages change infrequently
 import { MODULE_ROWS, isModuleIncludedInPlan, getAddOnPrice } from "@/lib/modules";
 import type { PlanId } from "@/lib/modules";
 import { PricingCards } from "./pricing-cards";
@@ -11,40 +12,40 @@ function cellContent(moduleId: string, planId: PlanId): string {
 
 export const metadata = {
   title: "Pricing | Westbridge",
-  description: "Simple, transparent pricing. Per user, per month. Add modules as you grow.",
+  description: "Simple, transparent pricing. Flat monthly. Unlimited users. Claude AI built into every module.",
   openGraph: {
     title: "Pricing | Westbridge",
-    description: "Simple, transparent pricing. Per user, per month. Add modules as you grow.",
+    description: "Simple, transparent pricing. Flat monthly. Unlimited users. Claude AI built into every module.",
   },
 };
 
 export default function PricingPage() {
   return (
-    <div className="mx-auto max-w-[var(--max-width)] px-[var(--space-container)] py-[var(--space-section-y)]">
-      <h1 className="text-h1 text-center font-semibold tracking-tight" style={{ color: "var(--color-ink)" }}>
+    <div className="mx-auto max-w-6xl px-6 py-20">
+      <h1 className="text-center text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
         Simple, transparent pricing
       </h1>
-      <p className="mt-3 text-center text-body" style={{ color: "var(--color-ink-secondary)" }}>
-        Per user, per month. Add modules as you grow.
+      <p className="mt-3 text-center text-base text-muted-foreground">
+        Flat monthly. Unlimited users. Claude AI built into every module.
       </p>
 
       <PricingCards />
 
-      <p className="mt-8 text-center text-caption">
-        Add-on modules: $8–15/mo each for Starter and Professional. Enterprise includes all 38 modules.
+      <p className="mt-8 text-center text-sm text-muted-foreground">
+        Add-on module bundles available for Starter and Business plans. Enterprise includes all 38 modules.
       </p>
-      <p className="mt-2 text-center text-caption" style={{ color: "var(--color-ink-tertiary)" }}>
+      <p className="mt-2 text-center text-sm text-muted-foreground/60">
         Payment is processed securely via 2Checkout (Verifone) — cards and local payment methods accepted.
       </p>
 
-      <div className="mt-16 overflow-hidden rounded-2xl border" style={{ borderColor: "var(--color-border-subtle)", background: "var(--color-ground)" }}>
-        <table className="w-full min-w-[600px] border-collapse text-body">
+      <div className="mt-16 overflow-hidden rounded-2xl border border-border bg-background">
+        <table className="w-full min-w-[600px] border-collapse text-base">
           <thead>
-            <tr style={{ background: "var(--color-ground-section)", borderBottom: "1px solid var(--color-border-subtle)" }}>
-              <th className="py-4 pl-6 text-left text-label" style={{ color: "var(--color-ink-tertiary)" }}>Module</th>
-              <th className="py-4 px-4 text-center text-label" style={{ color: "var(--color-ink-tertiary)" }}>Starter</th>
-              <th className="py-4 px-4 text-center text-label" style={{ color: "var(--color-ink-tertiary)" }}>Professional</th>
-              <th className="py-4 px-4 text-center text-label" style={{ color: "var(--color-ink-tertiary)" }}>Enterprise</th>
+            <tr className="border-b border-border bg-muted">
+              <th className="py-4 pl-6 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground/60">Module</th>
+              <th className="py-4 px-4 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground/60">Starter</th>
+              <th className="py-4 px-4 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground/60">Business</th>
+              <th className="py-4 px-4 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground/60">Enterprise</th>
             </tr>
           </thead>
           <tbody>
@@ -53,24 +54,23 @@ export default function PricingPage() {
               return (
                 <tr
                   key={row.moduleId}
-                  className="transition-colors hover:bg-[var(--color-ground-section)]"
-                  style={{ borderBottom: "1px solid var(--color-border-subtle)" }}
+                  className="border-b border-border transition-colors hover:bg-muted"
                 >
                   <td className="py-3 pl-6">
                     {showCategory && (
-                      <span className="mb-1 block text-label" style={{ color: "var(--color-ink-tertiary)" }}>
+                      <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground/60">
                         {row.category}
                       </span>
                     )}
-                    <span className="font-medium" style={{ color: "var(--color-ink)" }}>{row.module}</span>
+                    <span className="font-medium text-foreground">{row.module}</span>
                   </td>
-                  <td className="py-3 px-4 text-center" style={{ color: "var(--color-ink-secondary)" }}>
+                  <td className="py-3 px-4 text-center text-muted-foreground">
                     {cellContent(row.moduleId, "starter")}
                   </td>
-                  <td className="py-3 px-4 text-center" style={{ color: "var(--color-ink-secondary)" }}>
-                    {cellContent(row.moduleId, "professional")}
+                  <td className="py-3 px-4 text-center text-muted-foreground">
+                    {cellContent(row.moduleId, "business")}
                   </td>
-                  <td className="py-3 px-4 text-center" style={{ color: "var(--color-ink-secondary)" }}>
+                  <td className="py-3 px-4 text-center text-muted-foreground">
                     {cellContent(row.moduleId, "enterprise")}
                   </td>
                 </tr>

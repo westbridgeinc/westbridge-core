@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { Server, LayoutGrid, Users } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 
 const STORAGE_WELCOMED = "wb_welcomed";
 
@@ -48,7 +49,7 @@ export function WelcomeModal({
   return (
     <Modal open={open} onClose={onClose} title="Welcome to Westbridge" className="max-w-xl">
       <div className="px-6 pb-6">
-        <p className="text-body mt-1" style={{ color: "var(--color-ink-secondary)" }}>
+        <p className="mt-1 text-base text-muted-foreground">
           Your workspace is ready. Here&apos;s how to get the most out of it in your first 10 minutes.
         </p>
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -60,19 +61,15 @@ export function WelcomeModal({
                 href={card.href}
                 prefetch={true}
                 onClick={onClose}
-                className="flex flex-col rounded-[var(--radius-md)] border p-4 text-left transition-colors hover:bg-[var(--color-ground-muted)]"
-                style={{ borderColor: "var(--color-border)" }}
+                className="flex flex-col rounded-lg border border-border p-4 text-left transition-colors hover:bg-muted"
               >
-                <span
-                  className="flex h-10 w-10 items-center justify-center rounded-lg"
-                  style={{ background: "var(--color-ground-muted)" }}
-                >
-                  <Icon className="h-5 w-5" style={{ color: "var(--color-accent)" }} />
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                  <Icon className="h-5 w-5 text-primary" />
                 </span>
-                <span className="text-body font-semibold mt-3" style={{ color: "var(--color-ink)" }}>
+                <span className="mt-3 text-base font-semibold text-foreground">
                   {card.title}
                 </span>
-                <span className="text-caption mt-0.5" style={{ color: "var(--color-ink-tertiary)" }}>
+                <span className="mt-0.5 text-sm text-muted-foreground/60">
                   {card.description}
                 </span>
               </Link>
@@ -80,16 +77,14 @@ export function WelcomeModal({
           })}
         </div>
         <div className="mt-6 flex justify-end">
-          <button
-            type="button"
+          <Button
             onClick={() => {
               onClose();
               onGetStarted();
             }}
-            className="btn-primary"
           >
             Get started
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

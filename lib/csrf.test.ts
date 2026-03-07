@@ -41,12 +41,6 @@ describe("csrf", () => {
     expect(validateCsrf(token, null)).toBe(false);
   });
 
-  it("getCsrfTokenFromRequest returns token from header", async () => {
-    const { getCsrfTokenFromRequest } = await import("./csrf");
-    const r = new Request("http://x", { headers: { "x-csrf-token": "abc.def" } });
-    expect(getCsrfTokenFromRequest(r)).toBe("abc.def");
-  });
-
   it("verifyCsrfToken safeEqual catch when signature encoding differs", async () => {
     const { verifyCsrfToken, generateCsrfToken } = await import("./csrf");
     const token = generateCsrfToken();

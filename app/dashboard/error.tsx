@@ -18,25 +18,22 @@ export default function DashboardError({
   }, [error]);
 
   return (
-    <div
-      className="flex min-h-[60vh] flex-col items-center justify-center px-6"
-      style={{ background: "var(--color-ground)" }}
-    >
-      <h2 className="text-h3 font-semibold" style={{ color: "var(--color-ink)" }}>
+    <div className="flex min-h-[60vh] flex-col items-center justify-center bg-background px-6">
+      <h2 className="text-xl font-semibold text-foreground">
         Something went wrong
       </h2>
-      <p className="mt-2 text-body text-center max-w-md" style={{ color: "var(--color-ink-secondary)" }}>
+      <p className="mt-2 max-w-md text-center text-base text-muted-foreground">
         We couldn’t load this section. You can try again or go back to the dashboard.
       </p>
       <div className="mt-6 flex gap-4">
         <button
           type="button"
           onClick={reset}
-          className="btn-primary"
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
           Try again
         </button>
-        <Link href={ROUTES.dashboard} prefetch={true} className="btn-secondary">
+        <Link href={ROUTES.dashboard} prefetch={true} className="rounded-md border border-border bg-muted px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/80">
           Dashboard
         </Link>
       </div>

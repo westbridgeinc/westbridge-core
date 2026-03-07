@@ -23,8 +23,8 @@ export function DashboardBreadcrumbs() {
   const segments = pathname?.replace(/^\/dashboard\/?/, "").split("/").filter(Boolean) ?? [];
   if (segments.length === 0) return null;
   return (
-    <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-2 text-caption" style={{ color: "var(--color-ink-tertiary)" }}>
-      <Link href={ROUTES.dashboard} prefetch={true} className="transition-colors hover:opacity-100" style={{ color: "var(--color-ink-muted)" }}>
+    <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+      <Link href={ROUTES.dashboard} prefetch={true} className="text-muted-foreground/40 transition-colors hover:opacity-100">
         Dashboard
       </Link>
       {segments.map((segment, i) => {
@@ -35,9 +35,9 @@ export function DashboardBreadcrumbs() {
           <span key={segment} className="flex items-center gap-2">
             <span aria-hidden>/</span>
             {isLast ? (
-              <span style={{ color: "var(--color-ink-secondary)" }}>{label}</span>
+              <span className="text-muted-foreground">{label}</span>
             ) : (
-              <Link href={href} prefetch={true} className="transition-colors hover:opacity-100" style={{ color: "var(--color-ink-muted)" }}>
+              <Link href={href} prefetch={true} className="text-muted-foreground/40 transition-colors hover:opacity-100">
                 {label}
               </Link>
             )}

@@ -2,11 +2,11 @@
  * Data layer: 2Checkout payment links and IPN verification. Pure I/O.
  */
 
-import { createHash } from "crypto";
+import { createHash, timingSafeEqual } from "crypto";
 
 const SECRET_WORD = process.env.TWOCO_SECRET_WORD ?? "";
 
-export type PlanSlug = "Starter" | "Professional" | "Enterprise" | "Growth" | "Business";
+export type PlanSlug = "Starter" | "Business" | "Enterprise";
 
 export function getPaymentLinkUrl(
   plan: PlanSlug,
@@ -16,9 +16,9 @@ export function getPaymentLinkUrl(
   const base =
     plan === "Starter"
       ? process.env.TWOCO_LINK_STARTER
-      : plan === "Professional" || plan === "Growth"
-        ? (process.env.TWOCO_LINK_PROFESSIONAL ?? process.env.TWOCO_LINK_GROWTH)
-        : (process.env.TWOCO_LINK_ENTERPRISE ?? process.env.TWOCO_LINK_BUSINESS);
+      : plan === "Business"
+        ? process.env.TWOCO_LINK_BUSINESS
+        : process.env.TWOCO_LINK_ENTERPRISE;
   if (!base) return "";
   const url = new URL(base);
   url.searchParams.set("return_url", returnUrl);
@@ -36,7 +36,9 @@ export function verifyIPNSignature(params: Record<string, string | undefined>): 
   const total = params.TOTAL ?? params.ORDER_TOTAL ?? "";
   const toHash = SECRET_WORD + merchantSid + orderNumber + total;
   const expected = createHash("md5").update(toHash).digest("hex").toUpperCase();
-  return receivedHash.toUpperCase() === expected;
+  const a = receivedHash.toUpperCase();
+  if (a.length !== expected.length) return false;
+  return timingSafeEqual(Buffer.from(a, "utf8"), Buffer.from(expected, "utf8"));
 }
 
 export function isIPNSuccess(params: Record<string, string | undefined>): boolean {

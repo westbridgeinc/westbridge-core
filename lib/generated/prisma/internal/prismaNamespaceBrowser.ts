@@ -56,7 +56,10 @@ export const ModelName = {
   Session: 'Session',
   Subscription: 'Subscription',
   AuditLog: 'AuditLog',
-  ApiKey: 'ApiKey'
+  ApiKey: 'ApiKey',
+  InviteToken: 'InviteToken',
+  PasswordResetToken: 'PasswordResetToken',
+  WebhookEndpoint: 'WebhookEndpoint'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -79,6 +82,7 @@ export const AccountScalarFieldEnum = {
   id: 'id',
   email: 'email',
   companyName: 'companyName',
+  erpnextCompany: 'erpnextCompany',
   plan: 'plan',
   status: 'status',
   twocoOrderId: 'twocoOrderId',
@@ -99,6 +103,10 @@ export const UserScalarFieldEnum = {
   role: 'role',
   passwordHash: 'passwordHash',
   status: 'status',
+  failedLoginAttempts: 'failedLoginAttempts',
+  lockedUntil: 'lockedUntil',
+  lastFailedLogin: 'lastFailedLogin',
+  passwordChangedAt: 'passwordChangedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -113,7 +121,9 @@ export const SessionScalarFieldEnum = {
   erpnextSid: 'erpnextSid',
   ipAddress: 'ipAddress',
   userAgent: 'userAgent',
+  fingerprint: 'fingerprint',
   expiresAt: 'expiresAt',
+  lastActiveAt: 'lastActiveAt',
   createdAt: 'createdAt'
 } as const
 
@@ -137,14 +147,17 @@ export type SubscriptionScalarFieldEnum = (typeof SubscriptionScalarFieldEnum)[k
 
 export const AuditLogScalarFieldEnum = {
   id: 'id',
+  timestamp: 'timestamp',
   accountId: 'accountId',
   userId: 'userId',
   action: 'action',
   resource: 'resource',
   resourceId: 'resourceId',
-  metadata: 'metadata',
   ipAddress: 'ipAddress',
-  createdAt: 'createdAt'
+  userAgent: 'userAgent',
+  metadata: 'metadata',
+  severity: 'severity',
+  outcome: 'outcome'
 } as const
 
 export type AuditLogScalarFieldEnum = (typeof AuditLogScalarFieldEnum)[keyof typeof AuditLogScalarFieldEnum]
@@ -162,6 +175,48 @@ export const ApiKeyScalarFieldEnum = {
 } as const
 
 export type ApiKeyScalarFieldEnum = (typeof ApiKeyScalarFieldEnum)[keyof typeof ApiKeyScalarFieldEnum]
+
+
+export const InviteTokenScalarFieldEnum = {
+  id: 'id',
+  accountId: 'accountId',
+  email: 'email',
+  role: 'role',
+  tokenHash: 'tokenHash',
+  expiresAt: 'expiresAt',
+  usedAt: 'usedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type InviteTokenScalarFieldEnum = (typeof InviteTokenScalarFieldEnum)[keyof typeof InviteTokenScalarFieldEnum]
+
+
+export const PasswordResetTokenScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  tokenHash: 'tokenHash',
+  expiresAt: 'expiresAt',
+  usedAt: 'usedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type PasswordResetTokenScalarFieldEnum = (typeof PasswordResetTokenScalarFieldEnum)[keyof typeof PasswordResetTokenScalarFieldEnum]
+
+
+export const WebhookEndpointScalarFieldEnum = {
+  id: 'id',
+  accountId: 'accountId',
+  url: 'url',
+  events: 'events',
+  secret: 'secret',
+  enabled: 'enabled',
+  consecutiveFailures: 'consecutiveFailures',
+  disabledAt: 'disabledAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WebhookEndpointScalarFieldEnum = (typeof WebhookEndpointScalarFieldEnum)[keyof typeof WebhookEndpointScalarFieldEnum]
 
 
 export const SortOrder = {

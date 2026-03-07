@@ -19,16 +19,16 @@ export interface NotificationItem {
   read: boolean;
 }
 
-function dotColor(type: NotificationType): string {
+function dotColorClass(type: NotificationType): string {
   switch (type) {
     case "success":
-      return "var(--color-success)";
+      return "bg-emerald-500";
     case "error":
-      return "var(--color-error)";
+      return "bg-destructive";
     case "info":
-      return "var(--color-accent)";
+      return "bg-primary";
     default:
-      return "var(--color-ink-tertiary)";
+      return "bg-muted-foreground/60";
   }
 }
 
@@ -128,23 +128,15 @@ export function NotificationPanel({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-            ref={panelRef}
-            className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col border-l shadow-xl"
-            style={{
-              background: "var(--color-ground-elevated)",
-              borderColor: "var(--color-border)",
-            }}
+            className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col border-l border-border bg-card shadow-xl"
             onClick={(e) => e.stopPropagation()}
             onKeyDown={handleKeyDown}
             role="dialog"
             aria-modal
             aria-label="Notifications"
           >
-            <div
-              className="flex items-center justify-between border-b px-4 py-4"
-              style={{ borderColor: "var(--color-border)" }}
-            >
-              <h2 className="text-h3 font-semibold" style={{ color: "var(--color-ink)" }}>
+            <div className="flex items-center justify-between border-b border-border px-4 py-4">
+              <h2 className="text-xl font-semibold text-foreground">
                 Notifications
               </h2>
               <div className="flex items-center gap-2">
@@ -152,8 +144,7 @@ export function NotificationPanel({
                   <button
                     type="button"
                     onClick={onMarkAllRead}
-                    className="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors hover:bg-[var(--color-ground-muted)]"
-                    style={{ color: "var(--color-ink-secondary)" }}
+                    className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
                   >
                     Mark all read
                   </button>
@@ -161,10 +152,10 @@ export function NotificationPanel({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[var(--color-ground-muted)]"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-muted"
                   aria-label="Close"
                 >
-                  <X className="h-4 w-4" style={{ color: "var(--color-ink-tertiary)" }} />
+                  <X className="h-4 w-4" />
                 </button>
               </div>
             </div>
@@ -180,25 +171,18 @@ export function NotificationPanel({
               {loading ? (
                 <div className="mt-4 space-y-3">
                   {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="h-20 rounded-lg animate-pulse"
-                      style={{ background: "var(--color-ground-muted)" }}
-                    />
+                    <div key={i} className="h-20 rounded-lg bg-muted animate-pulse" />
                   ))}
                 </div>
               ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <span
-                    className="flex h-12 w-12 items-center justify-center rounded-full"
-                    style={{ background: "var(--color-ground-muted)" }}
-                  >
-                    <Check className="h-6 w-6" style={{ color: "var(--color-success)" }} />
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                    <Check className="h-6 w-6 text-emerald-500" />
                   </span>
-                  <p className="mt-4 text-body font-medium" style={{ color: "var(--color-ink)" }}>
+                  <p className="mt-4 text-base font-medium text-foreground">
                     You&apos;re all caught up
                   </p>
-                  <p className="mt-1 text-caption" style={{ color: "var(--color-ink-tertiary)" }}>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     No new notifications
                   </p>
                 </div>
@@ -209,25 +193,21 @@ export function NotificationPanel({
                       <button
                         type="button"
                         onClick={() => onMarkRead(n.id)}
-                        className="flex w-full items-start gap-3 rounded-lg px-3 py-3 text-left transition-colors hover:bg-[var(--color-ground-muted)]"
-                        style={{
-                          background: n.read ? "transparent" : "var(--color-ground-muted)",
-                        }}
+                        className={`flex w-full items-start gap-3 rounded-lg px-3 py-3 text-left transition-colors hover:bg-muted ${!n.read ? "bg-muted" : ""}`}
                       >
                         <span
-                          className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
-                          style={{ background: dotColor(n.type) }}
+                          className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dotColorClass(n.type)}`}
                         />
                         <div className="min-w-0 flex-1">
-                          <p className="text-body font-semibold" style={{ color: "var(--color-ink)" }}>
+                          <p className="text-base font-semibold text-foreground">
                             {n.title}
                           </p>
                           {n.description && (
-                            <p className="mt-0.5 text-caption" style={{ color: "var(--color-ink-tertiary)" }}>
+                            <p className="mt-0.5 text-sm text-muted-foreground/60">
                               {n.description}
                             </p>
                           )}
-                          <p className="mt-1 text-caption" style={{ color: "var(--color-ink-tertiary)" }}>
+                          <p className="mt-1 text-sm text-muted-foreground/60">
                             {n.time}
                           </p>
                         </div>

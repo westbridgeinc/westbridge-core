@@ -14,7 +14,7 @@ export interface AnimatedNumberProps {
 
 export function AnimatedNumber({
   value,
-  duration = 800,
+  duration: _duration = 800,
   className = "",
 }: AnimatedNumberProps) {
   const ref = useRef<HTMLSpanElement>(null);

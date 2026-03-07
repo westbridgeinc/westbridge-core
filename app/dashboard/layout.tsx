@@ -1,36 +1,32 @@
 "use client";
 
-import { DashboardSidebar } from "./DashboardSidebar";
-import { DashboardTopbar } from "@/components/dashboard/DashboardTopbar";
+import { Suspense } from "react";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/dashboard/AppSidebar";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { ErpConnectionBanner } from "@/components/dashboard/ErpConnectionBanner";
 import { ErpConnectionProvider } from "@/components/dashboard/ErpConnectionContext";
 import { PageTransition } from "@/components/dashboard/PageTransition";
 import { ShortcutsProvider } from "@/components/dashboard/ShortcutsContext";
-import { SidebarProvider, useSidebar } from "@/components/dashboard/SidebarContext";
-
-function DashboardShell({ children }: { children: React.ReactNode }) {
-  const { collapsed } = useSidebar();
-  return (
-    <div className="dashboard-theme min-h-screen" style={{ background: "var(--color-ground)" }}>
-      <DashboardSidebar />
-      <main
-        className={`min-h-screen p-4 transition-[margin-left] duration-200 ease-in-out md:p-8 ${collapsed ? "md:ml-16" : "md:ml-60"}`}
-        style={{ background: "var(--color-ground)" }}
-      >
-        <DashboardTopbar />
-        <ErpConnectionBanner />
-        <PageTransition>{children}</PageTransition>
-      </main>
-    </div>
-  );
-}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <ShortcutsProvider>
         <ErpConnectionProvider>
-          <DashboardShell>{children}</DashboardShell>
+          <div className="flex h-screen w-full">
+            {/* Suspense required because AppSidebar uses useSearchParams() */}
+            <Suspense fallback={<div className="w-[260px] min-w-[260px] border-r border-border bg-sidebar" />}>
+              <AppSidebar />
+            </Suspense>
+            <SidebarInset>
+              <DashboardHeader />
+              <ErpConnectionBanner />
+              <main className="flex-1 overflow-y-auto bg-muted/30 p-6">
+                <PageTransition>{children}</PageTransition>
+              </main>
+            </SidebarInset>
+          </div>
         </ErpConnectionProvider>
       </ShortcutsProvider>
     </SidebarProvider>

@@ -3,8 +3,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { DollarSign } from "lucide-react";
 import { MODULE_EMPTY_STATES, EMPTY_STATE_SUPPORT_LINE } from "@/lib/dashboard/empty-state-config";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { MetricCard } from "@/components/dashboard/MetricCard";
+import { Card, CardContent } from "@/components/ui/Card";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -12,6 +12,7 @@ import { SkeletonTable } from "@/components/ui/SkeletonTable";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatCurrency } from "@/lib/locale/currency";
 import { formatDate } from "@/lib/locale/date";
+import { AIChatPanel } from "@/components/ai/AIChatPanel";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -68,9 +69,7 @@ const columns: Column<PayrollRecord>[] = [
     id: "employee",
     header: "Employee",
     accessor: (row) => (
-      <span className="font-medium" style={{ color: "var(--color-ink)" }}>
-        {row.employee}
-      </span>
+      <span className="font-medium text-foreground">{row.employee}</span>
     ),
     sortValue: (row) => row.employee,
   },
@@ -78,7 +77,7 @@ const columns: Column<PayrollRecord>[] = [
     id: "period",
     header: "Period",
     accessor: (row) => (
-      <span style={{ color: "var(--color-ink-secondary)" }}>{formatDate(row.period)}</span>
+      <span className="text-muted-foreground">{formatDate(row.period)}</span>
     ),
     sortValue: (row) => row.period,
   },
@@ -87,7 +86,7 @@ const columns: Column<PayrollRecord>[] = [
     header: "Gross Pay",
     align: "right",
     accessor: (row) => (
-      <span style={{ color: "var(--color-ink-secondary)" }}>{formatCurrency(row.grossPay)}</span>
+      <span className="text-muted-foreground">{formatCurrency(row.grossPay)}</span>
     ),
     sortValue: (row) => row.grossPay,
   },
@@ -96,7 +95,7 @@ const columns: Column<PayrollRecord>[] = [
     header: "Deductions",
     align: "right",
     accessor: (row) => (
-      <span style={{ color: "var(--color-ink-tertiary)" }}>{formatCurrency(row.deductions)}</span>
+      <span className="text-muted-foreground/60">{formatCurrency(row.deductions)}</span>
     ),
     sortValue: (row) => row.deductions,
   },
@@ -105,7 +104,7 @@ const columns: Column<PayrollRecord>[] = [
     header: "Net Pay",
     align: "right",
     accessor: (row) => (
-      <span className="font-medium" style={{ color: "var(--color-ink)" }}>
+      <span className="font-medium text-foreground">
         {formatCurrency(row.netPay)}
       </span>
     ),
@@ -153,25 +152,27 @@ export default function PayrollPage() {
 
   const stats = useMemo(() => deriveStats(records), [records]);
 
+  const header = (
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Payroll</h1>
+        <p className="text-sm text-muted-foreground">Payroll runs, salary slips and deductions</p>
+      </div>
+      <Button variant="primary">+ Create New</Button>
+    </div>
+  );
+
   /* ---- Error state ---- */
   if (error) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Payroll" description="Payroll runs, salary slips and deductions" />
-        <div
-          className="flex flex-col items-center gap-4 rounded-[var(--radius-md)] border px-6 py-16 text-center"
-          style={{
-            borderColor: "var(--color-border)",
-            background: "var(--color-ground-elevated)",
-          }}
-        >
-          <p className="text-body" style={{ color: "var(--color-ink-secondary)" }}>
-            {error}
-          </p>
-          <Button variant="secondary" size="sm" onClick={fetchPayroll}>
-            Retry
-          </Button>
-        </div>
+        {header}
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+            <p className="text-sm text-muted-foreground">{error}</p>
+            <Button variant="outline" size="sm" onClick={fetchPayroll}>Retry</Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -180,17 +181,17 @@ export default function PayrollPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Payroll" description="Payroll runs, salary slips and deductions" />
+        {header}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="card animate-pulse"
-              style={{ minHeight: 88 }}
-            />
+            <div key={i} className="min-h-[88px] rounded-xl border border-border bg-card p-6 animate-pulse" />
           ))}
         </div>
-        <SkeletonTable rows={6} columns={6} />
+        <Card>
+          <CardContent className="p-0">
+            <SkeletonTable rows={6} columns={6} />
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -198,18 +199,16 @@ export default function PayrollPage() {
   /* ---- Success / Empty states ---- */
   return (
     <div className="space-y-6">
-      <PageHeader title="Payroll" description="Payroll runs, salary slips and deductions" />
-
-      {/* Metric cards */}
+      {header}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <MetricCard label="Employees" value={stats.headcount} />
         <MetricCard label="Total Gross" value={formatCurrency(stats.totalGross)} />
         <MetricCard label="Total Deductions" value={formatCurrency(stats.totalDeductions)} />
         <MetricCard label="Total Net Pay" value={formatCurrency(stats.totalNet)} />
       </div>
-
-      {/* Data table */}
-      <DataTable<PayrollRecord>
+      <Card>
+        <CardContent className="p-0">
+          <DataTable<PayrollRecord>
         columns={columns}
         data={records}
         keyExtractor={(r) => r.id}
@@ -225,7 +224,10 @@ export default function PayrollPage() {
           />
         }
         pageSize={20}
-      />
+          />
+        </CardContent>
+      </Card>
+      <AIChatPanel module="hr" />
     </div>
   );
 }

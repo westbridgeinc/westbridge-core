@@ -14,6 +14,7 @@ model Account {
   id               String   @id @default(cuid())
   email            String   @unique
   companyName      String   @map("company_name")
+  erpnextCompany   String?  @map("erpnext_company") // ERPNext Company name for row-level scoping
   plan             String   // Starter | Growth | Business
   status           String   @default("pending") // pending | active | past_due | canceled
   twocoOrderId     String?  @map("twoco_order_id")
@@ -22,27 +23,34 @@ model Account {
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
-  users        User[]
-  subscriptions Subscription[]
-  auditLogs    AuditLog[]
-  apiKeys      ApiKey[]
+  users              User[]
+  subscriptions      Subscription[]
+  auditLogs          AuditLog[]
+  apiKeys            ApiKey[]
+  inviteTokens       InviteToken[]
+  webhookEndpoints   WebhookEndpoint[]
 
   @@map("accounts")
 }
 
 model User {
-  id           String   @id @default(cuid())
-  accountId    String   @map("account_id")
-  email        String
-  name         String?
-  role         String   // "owner" | "admin" | "member"
-  passwordHash String?  @map("password_hash")
-  status       String   @default("active") // active | suspended | invited
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id                   String    @id @default(cuid())
+  accountId            String    @map("account_id")
+  email                String    /// @pii - Personal Identifiable Information
+  name                 String?   /// @pii - Personal Identifiable Information
+  role                 String    // "owner" | "admin" | "member"
+  passwordHash         String?   @map("password_hash")
+  status               String    @default("active") // active | suspended | invited
+  failedLoginAttempts  Int       @default(0)
+  lockedUntil          DateTime? @map("locked_until")
+  lastFailedLogin      DateTime? @map("last_failed_login")
+  passwordChangedAt    DateTime? @map("password_changed_at")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
 
-  account  Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  sessions Session[]
+  account             Account              @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  sessions            Session[]
+  passwordResetTokens PasswordResetToken[]
 
   @@unique([accountId, email])
   @@index([accountId])
@@ -51,14 +59,16 @@ model User {
 }
 
 model Session {
-  id         String   @id @default(cuid())
-  userId     String   @map("user_id")
-  token      String   @unique // SHA-256 hash of the raw token
-  erpnextSid String?  @map("erpnext_sid") // ERPNext session for API proxy
-  ipAddress  String?  @map("ip_address")
-  userAgent  String?  @map("user_agent")
-  expiresAt  DateTime @map("expires_at")
-  createdAt  DateTime @default(now()) @map("created_at")
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  token       String   @unique // SHA-256 hash of the raw token
+  erpnextSid  String?  @map("erpnext_sid") // ERPNext session for API proxy
+  ipAddress   String?  @map("ip_address") /// @pii - Personal Identifiable Information
+  userAgent   String?  @map("user_agent") /// @pii - Personal Identifiable Information
+  fingerprint String?  // hash of User-Agent for session binding
+  expiresAt   DateTime @map("expires_at")
+  lastActiveAt DateTime @default(now()) @map("last_active_at")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -88,19 +98,24 @@ model Subscription {
 
 model AuditLog {
   id         String   @id @default(cuid())
+  timestamp  DateTime @default(now())
   accountId  String   @map("account_id")
   userId     String?  @map("user_id")
-  action     String   // login | logout | signup | invoice.create | settings.update etc.
+  action     String
   resource   String?
   resourceId String?  @map("resource_id")
+  ipAddress  String?  @map("ip_address") /// @pii - Personal Identifiable Information
+  userAgent  String?  @map("user_agent") /// @pii - Personal Identifiable Information
   metadata   Json?
-  ipAddress  String?  @map("ip_address")
-  createdAt  DateTime @default(now()) @map("created_at")
+  severity   String   @default("info") // info, warn, critical
+  outcome    String   @default("success") // success, failure, error
 
   account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
-  @@index([accountId, createdAt])
-  @@index([userId])
+  @@index([accountId, timestamp])
+  @@index([userId, timestamp])
+  @@index([action, timestamp])
+  @@index([severity, timestamp])
   @@map("audit_logs")
 }
 
@@ -119,4 +134,54 @@ model ApiKey {
   @@index([keyHash])
   @@index([accountId])
   @@map("api_keys")
+}
+
+model InviteToken {
+  id        String    @id @default(cuid())
+  accountId String    @map("account_id")
+  email     String    /// @pii - Personal Identifiable Information
+  role      String    @default("member") // owner | admin | member
+  tokenHash String    @unique @map("token_hash") // SHA-256 of raw token
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, email])
+  @@index([tokenHash])
+  @@index([accountId])
+  @@map("invite_tokens")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash") // SHA-256 of raw token
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tokenHash])
+  @@map("password_reset_tokens")
+}
+
+model WebhookEndpoint {
+  id                  String    @id @default(cuid())
+  accountId           String    @map("account_id")
+  url                 String
+  events              String[]  // event types this endpoint subscribes to
+  secret              String    // HMAC signing secret (encrypted at rest in application layer)
+  enabled             Boolean   @default(true)
+  consecutiveFailures Int       @default(0) @map("consecutive_failures")
+  disabledAt          DateTime? @map("disabled_at") // set when circuit breaker trips; survives restarts
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@map("webhook_endpoints")
 }

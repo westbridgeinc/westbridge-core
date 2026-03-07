@@ -18,21 +18,18 @@ export default function Error({
   }, [error]);
 
   return (
-    <div
-      className="flex min-h-screen flex-col items-center justify-center px-6"
-      style={{ background: "var(--color-ground)" }}
-    >
-      <h1 className="text-h2 font-semibold tracking-tight" style={{ color: "var(--color-ink)" }}>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6">
+      <h1 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
         Something went wrong
       </h1>
-      <p className="mt-2 text-body text-center max-w-md" style={{ color: "var(--color-ink-secondary)" }}>
+      <p className="mt-2 max-w-md text-center text-base text-muted-foreground">
         We could not load this page. You can try again or return home.
       </p>
       <div className="mt-8 flex gap-4">
-        <button type="button" onClick={reset} className="btn-primary">
+        <button type="button" onClick={reset} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
           Try again
         </button>
-        <Link href={ROUTES.home} className="btn-secondary">
+        <Link href={ROUTES.home} className="rounded-md border border-border bg-muted px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/80">
           Back to {SITE.name}
         </Link>
       </div>

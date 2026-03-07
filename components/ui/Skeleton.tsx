@@ -18,7 +18,7 @@ export function Skeleton({
 }: SkeletonProps) {
   return (
     <div
-      className={`relative overflow-hidden animate-pulse rounded-[var(--radius-sm)] bg-[var(--color-ground-muted)] ${className}`}
+      className={`relative overflow-hidden animate-pulse rounded-md bg-muted ${className}`}
       style={{
         width: width != null ? (typeof width === "number" ? `${width}px` : width) : undefined,
         height: height != null ? (typeof height === "number" ? `${height}px` : height) : undefined,
@@ -45,8 +45,7 @@ export function SkeletonShimmer() {
 export function SkeletonCard({ className = "" }: { className?: string }) {
   return (
     <div
-      className={`rounded-[var(--radius-md)] border p-6 ${className}`}
-      style={{ borderColor: "var(--color-border)", background: "var(--color-ground-elevated)" }}
+      className={`rounded-lg border border-border bg-card p-6 ${className}`}
     >
       <Skeleton height={12} width={100} />
       <Skeleton height={28} width={140} className="mt-3" />
@@ -59,12 +58,11 @@ export function SkeletonCard({ className = "" }: { className?: string }) {
 export function SkeletonChart({ height = 256, className = "" }: { height?: number; className?: string }) {
   return (
     <div
-      className={`rounded-[var(--radius-md)] border p-6 ${className}`}
-      style={{ borderColor: "var(--color-border)", background: "var(--color-ground-elevated)" }}
+      className={`rounded-lg border border-border bg-card p-6 ${className}`}
     >
       <Skeleton height={16} width={120} />
       <Skeleton height={12} width={80} className="mt-1" />
-      <Skeleton height={height} width="100%" className="mt-4" style={{ borderRadius: "var(--radius-sm)" }} />
+      <Skeleton height={height} width="100%" className="mt-4 rounded-md" />
     </div>
   );
 }
@@ -73,11 +71,10 @@ export function SkeletonChart({ height = 256, className = "" }: { height?: numbe
 export function SkeletonList({ rows = 5, className = "" }: { rows?: number; className?: string }) {
   return (
     <div
-      className={`rounded-[var(--radius-md)] border divide-y ${className}`}
-      style={{ borderColor: "var(--color-border)", background: "var(--color-ground-elevated)" }}
+      className={`rounded-lg border border-border divide-y divide-border bg-card ${className}`}
     >
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex items-center gap-4 px-6 py-4" style={{ borderColor: "var(--color-border)" }}>
+        <div key={i} className="flex items-center gap-4 px-6 py-4">
           <Skeleton height={14} width={80} />
           <Skeleton height={14} width={160} />
           <Skeleton height={14} width={100} className="ml-auto" />

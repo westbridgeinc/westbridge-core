@@ -1,49 +1,111 @@
+"use client";
+
 import Link from "next/link";
-import Image from "next/image";
 import { SITE, ROUTES } from "@/lib/config/site";
+import { Logo } from "@/components/brand/Logo";
+
+const productLinks = [
+  { href: ROUTES.modules, label: "Features" },
+  { href: ROUTES.pricing, label: "Pricing" },
+  { href: "https://erpnext.com", label: "ERPNext", external: true },
+];
+
+const companyLinks = [
+  { href: ROUTES.about, label: "About" },
+  { href: "mailto:careers@westbridge.gy", label: "Careers" },
+  { href: "mailto:support@westbridge.gy", label: "Contact" },
+];
+
+const legalLinks = [
+  { href: ROUTES.privacy, label: "Privacy" },
+  { href: ROUTES.terms, label: "Terms" },
+];
 
 export function Footer() {
   return (
-    <footer
-      className="border-t py-12"
-      style={{
-        borderColor: "var(--color-surface-dark-border)",
-        background: "var(--color-surface-dark)",
-      }}
-    >
-      <div
-        className="mx-auto flex flex-col items-center justify-between gap-6 px-[var(--space-container)] sm:flex-row"
-        style={{ maxWidth: "var(--max-width)" }}
-      >
-        <div className="flex items-center gap-4">
-          <Image
-            src={SITE.logoPath}
-            alt={`${SITE.name} ${SITE.legal}`}
-            width={120}
-            height={36}
-            className="h-8 w-auto object-contain brightness-0 invert opacity-90"
-          />
-          <p className="text-caption" style={{ color: "var(--color-ink-muted)" }}>
-            © 2026 {SITE.name} {SITE.legal}
-          </p>
+    <footer className="border-t border-border bg-background">
+      <div className="mx-auto max-w-6xl px-6 py-16">
+        <div className="flex flex-col gap-12 md:flex-row md:justify-between">
+          <div>
+            <Logo variant="full" size="sm" className="text-foreground" />
+          </div>
+          <div className="grid gap-8 sm:grid-cols-3">
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                Product
+              </p>
+              <ul className="mt-4 space-y-3">
+                {productLinks.map((link) => (
+                  <li key={link.href}>
+                    {"external" in link && link.external ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {link.label}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                Company
+              </p>
+              <ul className="mt-4 space-y-3">
+                {companyLinks.map((link) => (
+                  <li key={link.href}>
+                    {link.href.startsWith("mailto:") ? (
+                      <a
+                        href={link.href}
+                        className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {link.label}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                Legal
+              </p>
+              <ul className="mt-4 space-y-3">
+                {legalLinks.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-wrap justify-center gap-8 text-body sm:justify-end" style={{ color: "var(--color-ink-muted)" }}>
-          <Link href={ROUTES.pricing} className="transition-colors hover:text-white">
-            Pricing
-          </Link>
-          <Link href={ROUTES.modules} className="transition-colors hover:text-white">
-            Modules
-          </Link>
-          <Link href={ROUTES.about} className="transition-colors hover:text-white">
-            About
-          </Link>
-          <Link href={ROUTES.terms} className="transition-colors hover:text-white">
-            Terms
-          </Link>
-          <Link href={ROUTES.privacy} className="transition-colors hover:text-white">
-            Privacy
-          </Link>
-        </div>
+        <p className="mt-12 border-t border-border pt-8 text-[13px] text-muted-foreground">
+          © 2026 {SITE.name} {SITE.legal}. All rights reserved.
+        </p>
       </div>
     </footer>
   );

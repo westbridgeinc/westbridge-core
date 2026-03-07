@@ -145,22 +145,17 @@ function SidebarProfile({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -4 }}
       transition={{ duration: 0.15 }}
-      className="absolute left-0 bottom-full mb-1 w-56 rounded-lg border py-1 shadow-lg"
-      style={{
-        background: "var(--color-ground-elevated)",
-        borderColor: "var(--color-border)",
-      }}
+      className="absolute left-0 bottom-full mb-1 w-56 rounded-lg border border-border bg-card py-1 shadow-lg"
     >
-      <div className="border-b px-3 py-2" style={{ borderColor: "var(--color-border-subtle)" }}>
-        <p className="truncate text-[0.9375rem] font-medium" style={{ color: "var(--color-ink)" }}>{user.name}</p>
-        <p className="truncate text-xs" style={{ color: "var(--color-ink-tertiary)" }}>{user.email}</p>
+      <div className="border-b border-border px-3 py-2">
+        <p className="truncate text-[0.9375rem] font-medium text-foreground">{user.name}</p>
+        <p className="truncate text-xs text-muted-foreground/60">{user.email}</p>
       </div>
       <Link
         href="/dashboard/settings"
         prefetch={true}
         onClick={() => { setOpen(false); onNavClick?.(); }}
-        className="flex items-center gap-2 px-3 py-2 text-[0.9375rem] transition-colors hover:bg-[var(--color-ground-section)]"
-        style={{ color: "var(--color-ink-secondary)" }}
+        className="flex items-center gap-2 px-3 py-2 text-[0.9375rem] text-muted-foreground transition-colors hover:bg-muted"
       >
         <Settings className="h-4 w-4" />
         Account settings
@@ -168,8 +163,7 @@ function SidebarProfile({
       <button
         type="button"
         onClick={() => { setOpen(false); openShortcutsModal(); onNavClick?.(); }}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.9375rem] transition-colors hover:bg-[var(--color-ground-section)]"
-        style={{ color: "var(--color-ink-secondary)" }}
+        className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.9375rem] text-muted-foreground transition-colors hover:bg-muted"
       >
         <Keyboard className="h-4 w-4" />
         Keyboard shortcuts
@@ -177,8 +171,7 @@ function SidebarProfile({
       <button
         type="button"
         onClick={handleSignOut}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.9375rem] transition-colors hover:bg-[var(--color-ground-section)]"
-        style={{ color: "var(--color-ink-secondary)" }}
+        className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.9375rem] text-muted-foreground transition-colors hover:bg-muted"
       >
         <LogOut className="h-4 w-4" />
         Sign out
@@ -206,10 +199,10 @@ function SidebarProfile({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-[var(--color-ground-section)]"
+        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-foreground transition-colors hover:bg-muted"
       >
         {avatarEl}
-        <span className="min-w-0 truncate text-[0.9375rem] font-medium" style={{ color: "var(--color-ink)" }}>
+        <span className="min-w-0 truncate text-[0.9375rem] font-medium">
           {user.name}
         </span>
       </button>
@@ -220,8 +213,7 @@ function SidebarProfile({
         href="/dashboard/settings"
         prefetch={true}
         onClick={onNavClick}
-        className="flex items-center gap-2 px-3 py-2 text-[0.9375rem] font-medium transition-opacity hover:opacity-100"
-        style={{ color: "var(--color-ink-secondary)" }}
+        className="flex items-center gap-2 px-3 py-2 text-[0.9375rem] font-medium text-muted-foreground transition-opacity hover:opacity-100"
       >
         <Settings className="h-4 w-4" />
         Settings
@@ -240,8 +232,7 @@ function SidebarContent({ onNavClick, forceExpanded }: { onNavClick?: () => void
       <Link href="/dashboard" prefetch={true} className="flex items-center gap-2 py-1" onClick={onNavClick}>
         {isCollapsed ? (
           <div
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-white"
-            style={{ background: "var(--color-primary)" }}
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white"
           >
             W
           </div>
@@ -255,12 +246,12 @@ function SidebarContent({ onNavClick, forceExpanded }: { onNavClick?: () => void
           />
         )}
       </Link>
-      <div className="my-4 border-t" style={{ borderColor: "var(--color-border-subtle)" }} />
+      <div className="my-4 border-t border-border" />
       <nav className="flex-1 space-y-6 overflow-y-auto overflow-x-hidden">
         {sections.map((sec, secIdx) => (
           <div key={sec.title}>
             {!isCollapsed && (
-              <p className="mb-2 mt-6 text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-ink-tertiary)" }}>
+              <p className="mb-2 mt-6 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
                 {sec.title}
               </p>
             )}
@@ -274,18 +265,13 @@ function SidebarContent({ onNavClick, forceExpanded }: { onNavClick?: () => void
                     href={item.href}
                     prefetch={true}
                     onClick={onNavClick}
-                    className="relative flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-[0.9375rem] transition-[background-color,color] duration-150 ease-out hover:bg-[var(--color-ground-section)]"
-                    style={{
-                      color: isActive ? "var(--color-accent)" : "var(--color-ink-secondary)",
-                      background: isActive ? "var(--color-ground-section)" : "transparent",
-                      justifyContent: isCollapsed ? "center" : "flex-start",
-                    }}
+                    className={`relative flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-[0.9375rem] transition-[background-color,color] duration-150 ease-out hover:bg-muted ${isActive ? "bg-muted text-primary" : "text-muted-foreground"}`}
+                    style={{ justifyContent: isCollapsed ? "center" : "flex-start" }}
                   >
                     {isActive && (
                       <motion.span
                         layoutId="sidebar-active"
-                        className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full"
-                        style={{ background: "var(--color-accent)" }}
+                        className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-primary"
                         transition={{ type: "tween", duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
                       />
                     )}
@@ -314,7 +300,7 @@ function SidebarContent({ onNavClick, forceExpanded }: { onNavClick?: () => void
           </div>
         ))}
       </nav>
-      <div className="border-t pt-3" style={{ borderColor: "var(--color-border-subtle)" }}>
+      <div className="border-t border-border pt-3">
         <SidebarProfile
           user={PLACEHOLDER_USER}
           isCollapsed={isCollapsed}
@@ -323,8 +309,7 @@ function SidebarContent({ onNavClick, forceExpanded }: { onNavClick?: () => void
         <button
           type="button"
           onClick={toggle}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-xs font-medium transition-colors hover:bg-[var(--color-ground-section)]"
-          style={{ color: "var(--color-ink-tertiary)" }}
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-xs font-medium text-muted-foreground/60 transition-colors hover:bg-muted"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {isCollapsed ? <ChevronsRight className="h-4 w-4" /> : <ChevronsLeft className="h-4 w-4" />}
@@ -340,12 +325,8 @@ export function DashboardSidebar() {
 
   const desktopSidebar = (
     <aside
-      className="fixed left-0 top-0 z-10 hidden h-screen border-r transition-[width] duration-200 ease-in-out md:block"
-      style={{
-        width: collapsed ? 64 : SIDEBAR_WIDTH,
-        borderColor: "var(--color-border)",
-        background: "var(--color-ground)",
-      }}
+      className="fixed left-0 top-0 z-10 hidden h-screen border-r border-border bg-background transition-[width] duration-200 ease-in-out md:block"
+      style={{ width: collapsed ? 64 : SIDEBAR_WIDTH }}
     >
       <SidebarContent />
     </aside>
@@ -368,11 +349,7 @@ export function DashboardSidebar() {
             onKeyDown={(e) => e.key === "Escape" && setMobileOpen(false)}
           />
           <motion.aside
-            className="fixed left-0 top-0 z-30 h-screen w-[240px] border-r md:hidden"
-            style={{
-              borderColor: "var(--color-border)",
-              background: "var(--color-ground)",
-            }}
+            className="fixed left-0 top-0 z-30 h-screen w-[240px] border-r border-border bg-background md:hidden"
             initial={{ x: -SIDEBAR_WIDTH }}
             animate={{ x: 0 }}
             exit={{ x: -SIDEBAR_WIDTH }}

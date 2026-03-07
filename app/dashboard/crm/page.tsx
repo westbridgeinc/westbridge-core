@@ -3,13 +3,14 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Users, Briefcase } from "lucide-react";
 import { MODULE_EMPTY_STATES, EMPTY_STATE_SUPPORT_LINE } from "@/lib/dashboard/empty-state-config";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonCard } from "@/components/ui/Skeleton";
 import { formatCurrency } from "@/lib/locale/currency";
 import { formatDate } from "@/lib/locale/date";
+import { AIChatPanel } from "@/components/ai/AIChatPanel";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -60,21 +61,11 @@ function KanbanSkeleton() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="min-w-[280px] flex-1 rounded-xl border p-3"
-          style={{
-            borderColor: "var(--color-border-subtle)",
-            background: "var(--color-ground-muted)",
-          }}
+          className="min-w-[280px] flex-1 rounded-xl border border-border bg-muted p-3"
         >
           <div className="mb-3 flex items-center justify-between">
-            <div
-              className="h-4 w-20 animate-pulse rounded"
-              style={{ background: "var(--color-border)" }}
-            />
-            <div
-              className="h-3 w-16 animate-pulse rounded"
-              style={{ background: "var(--color-border)" }}
-            />
+            <div className="h-4 w-20 animate-pulse rounded bg-border" />
+            <div className="h-3 w-16 animate-pulse rounded bg-border" />
           </div>
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, j) => (
@@ -160,65 +151,44 @@ export default function CRMPage() {
   /* ---------- Error state ---------- */
   if (error) {
     return (
-      <div>
-        <PageHeader title="CRM Pipeline" description="Track deals through your sales pipeline" />
-        <div
-          className="mt-6 rounded-xl border p-6 text-center"
-          style={{
-            borderColor: "var(--color-border)",
-            background: "var(--color-ground-elevated)",
-          }}
-        >
-          <div
-            className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl"
-            style={{ background: "rgb(239 68 68 / 0.1)", color: "var(--color-error)" }}
-          >
-            <Briefcase className="h-6 w-6" />
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">CRM Pipeline</h1>
+            <p className="text-sm text-muted-foreground">Track deals through your sales pipeline</p>
           </div>
-          <p className="text-sm font-medium" style={{ color: "var(--color-ink)" }}>
-            Something went wrong
-          </p>
-          <p className="mt-1 text-sm" style={{ color: "var(--color-ink-tertiary)" }}>
-            {error}
-          </p>
-          <div className="mt-4">
-            <Button variant="primary" size="sm" onClick={retry}>
-              Retry
-            </Button>
-          </div>
+          <Button variant="primary" asChild><a href="/dashboard/crm/new">+ Create New</a></Button>
         </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
+              <Briefcase className="h-6 w-6" />
+            </div>
+            <p className="text-sm font-medium text-foreground">Something went wrong</p>
+            <p className="mt-1 text-sm text-muted-foreground">{error}</p>
+            <Button variant="primary" size="sm" className="mt-4" onClick={retry}>Retry</Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   /* ---------- Main render ---------- */
   return (
-    <div>
-      <PageHeader
-        title="CRM Pipeline"
-        description="Track deals through your sales pipeline"
-        action={
-          <a href="/dashboard/crm/new">
-            <Button variant="primary" size="md">
-              Add Opportunity
-            </Button>
-          </a>
-        }
-      />
-
-      {/* Loading */}
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">CRM Pipeline</h1>
+          <p className="text-sm text-muted-foreground">Track deals through your sales pipeline</p>
+        </div>
+        <Button variant="primary" asChild><a href="/dashboard/crm/new">+ Create New</a></Button>
+      </div>
       {loading ? (
         <KanbanSkeleton />
       ) : deals.length === 0 ? (
-        /* Empty state */
-        <div
-          className="mt-6 rounded-xl border"
-          style={{
-            borderColor: "var(--color-border)",
-            background: "var(--color-ground-elevated)",
-          }}
-        >
-          <EmptyState
+        <Card>
+          <CardContent className="p-0">
+            <EmptyState
             icon={<Users className="h-6 w-6" />}
             title={MODULE_EMPTY_STATES.crm.title}
             description={MODULE_EMPTY_STATES.crm.description}
@@ -226,34 +196,24 @@ export default function CRMPage() {
             actionHref={MODULE_EMPTY_STATES.crm.actionLink}
             supportLine={EMPTY_STATE_SUPPORT_LINE}
           />
-        </div>
+          </CardContent>
+        </Card>
       ) : (
-        /* Kanban board */
-        <div className="mt-6 flex gap-4 overflow-x-auto pb-4">
+        <div className="flex gap-4 overflow-x-auto pb-4">
           {columns.map((col) => (
             <div
               key={col.id}
-              className="min-w-[280px] flex-1 rounded-xl border p-3"
-              style={{
-                borderColor: "var(--color-border-subtle)",
-                background: "var(--color-ground-muted)",
-              }}
+              className="min-w-[280px] flex-1 rounded-xl border border-border bg-muted p-3"
             >
               {/* Column header */}
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <h2
-                    className="text-sm font-semibold"
-                    style={{ color: "var(--color-ink)" }}
-                  >
+                  <h2 className="text-sm font-semibold text-foreground">
                     {col.title}
                   </h2>
                   <Badge status={col.title}>{col.count}</Badge>
                 </div>
-                <span
-                  className="text-xs"
-                  style={{ color: "var(--color-ink-tertiary)" }}
-                >
+                <span className="text-xs text-muted-foreground/60">
                   {col.total > 0 ? formatCurrency(col.total, "USD") : "\u2014"}
                 </span>
               </div>
@@ -263,51 +223,23 @@ export default function CRMPage() {
                 {col.deals.map((deal) => (
                   <div
                     key={deal.name}
-                    className="cursor-pointer rounded-lg border p-4 transition-colors duration-100"
-                    style={{
-                      borderColor: "var(--color-border)",
-                      background: "var(--color-ground-elevated)",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "var(--color-border-subtle)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "var(--color-border)";
-                    }}
+                    className="cursor-pointer rounded-lg border border-border bg-card p-4 transition-colors duration-100 hover:border-border"
                   >
-                    <p
-                      className="font-medium text-sm"
-                      style={{ color: "var(--color-ink)" }}
-                    >
+                    <p className="text-sm font-medium text-foreground">
                       {deal.company}
                     </p>
-                    <p
-                      className="mt-0.5 text-sm"
-                      style={{ color: "var(--color-ink-secondary)" }}
-                    >
+                    <p className="mt-0.5 text-sm text-muted-foreground">
                       {deal.amount > 0 ? formatCurrency(deal.amount, "USD") : "\u2014"}
                     </p>
                     <div className="mt-3 flex items-center justify-between">
-                      <span
-                        className="text-xs"
-                        style={{ color: "var(--color-ink-tertiary)" }}
-                      >
+                      <span className="text-xs text-muted-foreground/60">
                         {deal.contact}
                       </span>
                       <div className="flex items-center gap-2">
-                        <span
-                          className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium"
-                          style={{
-                            background: "var(--color-ground-muted)",
-                            color: "var(--color-ink-secondary)",
-                          }}
-                        >
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium bg-muted text-muted-foreground">
                           {initials(deal.contact)}
                         </span>
-                        <span
-                          className="text-xs"
-                          style={{ color: "var(--color-ink-tertiary)" }}
-                        >
+                        <span className="text-xs text-muted-foreground/60">
                           {deal.date ? formatDate(deal.date) : "\u2014"}
                         </span>
                       </div>
@@ -315,10 +247,7 @@ export default function CRMPage() {
                   </div>
                 ))}
                 {col.deals.length === 0 && (
-                  <p
-                    className="py-8 text-center text-xs"
-                    style={{ color: "var(--color-ink-tertiary)" }}
-                  >
+                  <p className="py-8 text-center text-xs text-muted-foreground/60">
                     No deals
                   </p>
                 )}
@@ -327,6 +256,7 @@ export default function CRMPage() {
           ))}
         </div>
       )}
+      <AIChatPanel module="crm" />
     </div>
   );
 }

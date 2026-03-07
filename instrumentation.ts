@@ -7,6 +7,8 @@ import * as Sentry from "@sentry/nextjs";
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     await import("./sentry.server.config");
+    const { initTelemetry } = await import("./lib/telemetry");
+    await initTelemetry();
     const { validateEnv } = await import("./lib/env");
     const result = validateEnv();
     if (!result.ok) {

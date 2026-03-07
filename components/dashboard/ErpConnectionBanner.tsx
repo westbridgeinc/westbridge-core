@@ -29,11 +29,8 @@ export function ErpConnectionBanner() {
 
   useEffect(() => {
     const until = getDismissedUntil();
-    if (until !== null && Date.now() < until) {
-      setDismissed(true);
-      return;
-    }
-    setDismissed(false);
+    const next = until !== null && Date.now() < until;
+    queueMicrotask(() => setDismissed(next));
   }, []);
 
   const hideSettings = pathname === "/dashboard/settings";
@@ -47,17 +44,10 @@ export function ErpConnectionBanner() {
   if (!show) return null;
 
   return (
-    <div
-      className="mb-6 flex items-center justify-between gap-4 rounded-[var(--radius-md)] border border-l-4 py-3 pl-4 pr-3"
-      style={{
-        borderColor: "var(--color-border)",
-        borderLeftColor: "var(--color-warning)",
-        background: "var(--color-ground-elevated)",
-      }}
-    >
+    <div className="mb-6 flex items-center justify-between gap-4 rounded-lg border border-border border-l-4 border-l-amber-500 bg-card py-3 pl-4 pr-3">
       <div className="flex items-center gap-3">
-        <AlertTriangle className="h-5 w-5 shrink-0" style={{ color: "var(--color-warning)" }} />
-        <p className="text-body" style={{ color: "var(--color-ink)" }}>
+        <AlertTriangle className="h-5 w-5 shrink-0 text-amber-500" />
+        <p className="text-base text-foreground">
           ERPNext is not connected. Some features require an active ERPNext instance.
         </p>
       </div>
@@ -65,21 +55,17 @@ export function ErpConnectionBanner() {
         <Link
           href="/dashboard/settings"
           prefetch={true}
-          className="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors hover:opacity-90"
-          style={{
-            color: "var(--color-ink)",
-            background: "var(--color-ground-muted)",
-          }}
+          className="rounded-lg bg-muted px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:opacity-90"
         >
           Configure in Settings
         </Link>
         <button
           type="button"
           onClick={handleDismiss}
-          className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[var(--color-ground-muted)]"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-muted"
           aria-label="Dismiss"
         >
-          <X className="h-4 w-4" style={{ color: "var(--color-ink-tertiary)" }} />
+          <X className="h-4 w-4" />
         </button>
       </div>
     </div>

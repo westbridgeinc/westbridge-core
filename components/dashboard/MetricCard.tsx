@@ -6,25 +6,25 @@ interface MetricCardProps {
 }
 
 export function MetricCard({ label, value, subtext, subtextVariant = "muted" }: MetricCardProps) {
-  const subtextColor =
+  const subtextClass =
     subtextVariant === "success"
-      ? "var(--color-success)"
+      ? "text-emerald-500"
       : subtextVariant === "error"
-        ? "var(--color-error)"
+        ? "text-destructive"
         : subtextVariant === "default"
-          ? "var(--color-ink-secondary)"
-          : "var(--color-ink-tertiary)";
+          ? "text-muted-foreground"
+          : "text-muted-foreground/60";
 
   return (
-    <div className="card">
-      <p className="text-label" style={{ color: "var(--color-ink-tertiary)" }}>
+    <div className="rounded-xl border border-border bg-card p-6">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground/60">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-semibold tracking-tight" style={{ color: "var(--color-ink)" }}>
+      <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
         {value}
       </p>
       {subtext != null && (
-        <p className="mt-1 text-caption" style={{ color: subtextColor }}>
+        <p className={`mt-1 text-sm ${subtextClass}`}>
           {subtext}
         </p>
       )}

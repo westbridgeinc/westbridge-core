@@ -142,10 +142,7 @@ export function DataTable<T>({
   if (data.length === 0) {
     return (
       emptyState ?? (
-        <div
-          className={`rounded-[var(--radius-md)] border ${className}`}
-          style={{ borderColor: "var(--color-border)" }}
-        >
+        <div className={`rounded-lg border border-border ${className}`}>
           <EmptyState
             title={emptyTitle}
             description={emptyDescription}
@@ -163,10 +160,10 @@ export function DataTable<T>({
       <div className="space-y-2 py-3">
         {cols.map((col) => (
           <div key={col.id} className="flex flex-col gap-0.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-ink-tertiary)" }}>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
               {col.header}
             </span>
-            <span className="text-[0.9375rem]" style={{ color: "var(--color-ink)" }}>
+            <span className="text-[0.9375rem] text-foreground">
               {col.accessor(row)}
             </span>
           </div>
@@ -178,23 +175,17 @@ export function DataTable<T>({
   return (
     <div className={className}>
       {/* Desktop: table */}
-      <div
-        className="hidden overflow-hidden rounded-[var(--radius-md)] border md:block"
-        style={{ borderColor: "var(--color-border)" }}
-      >
+      <div className="hidden overflow-hidden rounded-lg border border-border md:block">
         <table className="w-full text-[0.9375rem]">
           <thead>
-            <tr
-              className="border-b"
-              style={{ borderColor: "var(--color-border)", background: "var(--color-ground-muted)" }}
-            >
+            <tr className="border-b border-border bg-muted/50">
               {selectable && (
                 <th className="w-12 py-3 pl-4">
                   <input
                     type="checkbox"
                     checked={allSelected}
                     onChange={toggleAll}
-                    className="h-4 w-4 rounded accent-[var(--color-primary)]"
+                    className="h-4 w-4 rounded accent-primary"
                     aria-label="Select all"
                   />
                 </th>
@@ -205,11 +196,10 @@ export function DataTable<T>({
                 return (
                   <th
                     key={col.id}
-                    className={`py-3 px-4 text-[11px] font-semibold uppercase tracking-wider ${
+                    className={`px-4 py-3 text-xs font-medium uppercase text-muted-foreground ${
                       sortable ? "cursor-pointer select-none" : ""
                     }`}
                     style={{
-                      color: "var(--color-ink-tertiary)",
                       textAlign: col.align ?? "left",
                       width: col.width,
                     }}
@@ -249,16 +239,8 @@ export function DataTable<T>({
               return (
                 <tr
                   key={key}
-                  className="border-b transition-colors duration-100"
-                  style={{
-                    borderColor: "var(--color-border)",
-                    background: isSelected
-                      ? "rgb(20 184 166 / 0.06)"
-                      : isFocused
-                        ? "var(--color-ground-muted)"
-                        : undefined,
-                    cursor: onRowClick ? "pointer" : undefined,
-                  }}
+                  className={`border-b border-border transition-colors duration-100 hover:bg-muted/50 ${isSelected ? "bg-primary/10" : isFocused ? "bg-muted/50" : ""} ${onRowClick ? "cursor-pointer" : ""}`}
+                  style={{ cursor: onRowClick ? "pointer" : undefined }}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                   onMouseEnter={() => setFocusedRow(ri)}
                 >
@@ -269,7 +251,7 @@ export function DataTable<T>({
                         checked={isSelected ?? false}
                         onChange={() => toggleRow(key)}
                         onClick={(e) => e.stopPropagation()}
-                        className="h-4 w-4 rounded accent-[var(--color-primary)]"
+                        className="h-4 w-4 rounded accent-primary"
                         aria-label={`Select row ${key}`}
                       />
                     </td>
@@ -277,11 +259,8 @@ export function DataTable<T>({
                   {columns.map((col) => (
                     <td
                       key={col.id}
-                      className="py-3 px-4"
-                      style={{
-                        textAlign: col.align ?? "left",
-                        color: "var(--color-ink)",
-                      }}
+                      className="px-4 py-3 text-sm text-foreground"
+                      style={{ textAlign: col.align ?? "left" }}
                     >
                       {col.accessor(row)}
                     </td>
@@ -314,12 +293,7 @@ export function DataTable<T>({
                     }
                   : undefined
               }
-              className="rounded-[var(--radius-md)] border p-4 text-left transition-colors"
-              style={{
-                borderColor: "var(--color-border)",
-                background: "var(--color-ground)",
-                cursor: onRowClick ? "pointer" : undefined,
-              }}
+              className={`rounded-lg border border-border bg-background p-4 text-left transition-colors ${onRowClick ? "cursor-pointer" : ""}`}
             >
               {cardContent}
             </div>

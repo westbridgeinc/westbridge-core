@@ -11,6 +11,10 @@ export interface ApiMeta {
     total: number;
     total_pages: number;
   };
+  /** ERP list: page index (0-based), page size, and whether more pages exist */
+  page?: number;
+  pageSize?: number;
+  hasMore?: boolean;
 }
 
 export interface ApiSuccess<T> {

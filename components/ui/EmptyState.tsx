@@ -17,18 +17,15 @@ export function EmptyState({ icon, title, description, actionLabel, onAction, ac
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       {icon && (
-        <div
-          className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl"
-          style={{ background: "var(--color-ground-muted)", color: "var(--color-ink-tertiary)" }}
-        >
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl text-muted-foreground/50">
           {icon}
         </div>
       )}
-      <h3 className="text-h3 font-semibold" style={{ color: "var(--color-ink)" }}>
+      <h3 className="text-lg font-semibold text-foreground">
         {title}
       </h3>
       {description && (
-        <p className="mt-2 max-w-sm text-body" style={{ color: "var(--color-ink-secondary)" }}>
+        <p className="mt-2 max-w-sm text-sm text-muted-foreground">
           {description}
         </p>
       )}
@@ -36,15 +33,15 @@ export function EmptyState({ icon, title, description, actionLabel, onAction, ac
         <div className="mt-6">
           {actionHref ? (
             <a href={actionHref}>
-              <Button variant="primary" size="md">{actionLabel}</Button>
+              <Button variant="default" size="default">{actionLabel}</Button>
             </a>
           ) : (
-            <Button variant="primary" size="md" onClick={onAction}>{actionLabel}</Button>
+            <Button variant="default" size="default" onClick={onAction}>{actionLabel}</Button>
           )}
         </div>
       )}
       {supportLine && (
-        <p className="mt-4 text-caption" style={{ color: "var(--color-ink-tertiary)" }}>
+        <p className="mt-4 text-sm text-muted-foreground/60">
           {supportLine}
         </p>
       )}
