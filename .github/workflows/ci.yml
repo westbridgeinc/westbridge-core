@@ -194,8 +194,11 @@ jobs:
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
       - name: Start app
+        # "next start" does not work with output:standalone — use the standalone server directly.
+        # The static assets must be in place alongside the server entry point.
         run: |
-          npm start &
+          cp -r .next/static .next/standalone/.next/static
+          node .next/standalone/server.js &
           npx wait-on --timeout 60000 http://localhost:3000
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
@@ -206,6 +209,8 @@ jobs:
           TWOCO_SECRET_WORD: ${{ env.TWOCO_SECRET_WORD }}
           ENCRYPTION_KEY: ${{ env.ENCRYPTION_KEY }}
           REDIS_PASSWORD: ci-redis-password-not-for-production
+          PORT: 3000
+          HOSTNAME: 0.0.0.0
       - name: Run E2E tests
         run: npm run test:e2e
         env:
