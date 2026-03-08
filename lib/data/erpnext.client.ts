@@ -5,7 +5,21 @@
 
 import { Result, ok, err } from "@/lib/utils/result";
 
-const ERPNEXT_URL = process.env.ERPNEXT_URL || "http://localhost:8080";
+// Validate ERPNEXT_URL at module load in production to fail fast rather than
+// silently sending credentials over plain HTTP.
+const ERPNEXT_URL = (() => {
+  const url = process.env.ERPNEXT_URL;
+  if (!url) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("ERPNEXT_URL environment variable is required in production");
+    }
+    return "http://localhost:8080";
+  }
+  if (process.env.NODE_ENV === "production" && !url.startsWith("https://")) {
+    throw new Error("ERPNEXT_URL must use HTTPS in production");
+  }
+  return url;
+})();
 
 const ACCOUNT_HEADER = "X-Westbridge-Account-Id";
 
@@ -54,7 +68,7 @@ async function fetchErp(
       }
     } catch (e) {
       lastError = e instanceof Error ? e.message : "ERPNext request failed";
-      const isNetworkError = e instanceof TypeError;
+      const isNetworkError = e instanceof TypeError || (e instanceof DOMException && e.name === "TimeoutError");
       if (!isNetworkError || attempt === MAX_ATTEMPTS - 1) return err(lastError);
       if (attempt < MAX_ATTEMPTS - 1) {
         await sleep(BACKOFF_BASE_MS * (attempt + 1));
@@ -90,15 +104,35 @@ export async function erpList(
   };
 
   if (erpnextCompany) {
-    // Merge company filter with any existing filters
-    const existingFilters: unknown[][] = params?.filters ? JSON.parse(params.filters) : [];
+    // Merge company filter with any existing filters.
+    // Wrap JSON.parse in try/catch: a malformed filters string must return a
+    // clean Result error rather than an unhandled exception.
+    let existingFilters: unknown[][] = [];
+    if (params?.filters) {
+      try {
+        const parsed = JSON.parse(params.filters);
+        existingFilters = Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return err("Invalid filters parameter: must be a valid JSON array");
+      }
+    }
     const companyFilter: unknown[] = [doctype, "company", "=", erpnextCompany];
     const merged = [...existingFilters, companyFilter];
     queryParams.filters = JSON.stringify(merged);
+  } else if (params?.filters) {
+    // Validate filters JSON even when no company scope is added.
+    try {
+      JSON.parse(params.filters);
+    } catch {
+      return err("Invalid filters parameter: must be a valid JSON array");
+    }
   }
 
   const query = new URLSearchParams(queryParams).toString();
-  const result = await fetchErp(`/resource/${doctype}?${query}`, sessionId, undefined, accountId);
+  // encodeURIComponent(doctype) prevents path traversal/injection when doctype
+  // contains URL metacharacters (e.g. slashes, question marks). ERPNext doctypes
+  // with spaces (e.g. "Sales Invoice") are encoded as "Sales%20Invoice".
+  const result = await fetchErp(`/resource/${encodeURIComponent(doctype)}?${query}`, sessionId, undefined, accountId);
   if (!result.ok) return err(result.error);
   const body = result.data as { data?: unknown[] };
   return ok(Array.isArray(body?.data) ? body.data : []);
@@ -111,7 +145,7 @@ export async function erpGet(
   accountId?: string
 ): Promise<Result<unknown, string>> {
   const result = await fetchErp(
-    `/resource/${doctype}/${encodeURIComponent(name)}`,
+    `/resource/${encodeURIComponent(doctype)}/${encodeURIComponent(name)}`,
     sessionId,
     undefined,
     accountId
@@ -128,7 +162,7 @@ export async function erpCreate(
   accountId?: string
 ): Promise<Result<unknown, string>> {
   return fetchErp(
-    `/resource/${doctype}`,
+    `/resource/${encodeURIComponent(doctype)}`,
     sessionId,
     { method: "POST", body: JSON.stringify(body) },
     accountId
@@ -143,7 +177,7 @@ export async function erpUpdate(
   accountId?: string
 ): Promise<Result<unknown, string>> {
   return fetchErp(
-    `/resource/${doctype}/${encodeURIComponent(name)}`,
+    `/resource/${encodeURIComponent(doctype)}/${encodeURIComponent(name)}`,
     sessionId,
     { method: "PUT", body: JSON.stringify(updates) },
     accountId
