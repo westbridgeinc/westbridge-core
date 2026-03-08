@@ -35,6 +35,10 @@ export function decrypt(ciphertext: string): string {
 
   const tryDecrypt = (key: Buffer): string => {
     const decipher = createDecipheriv(ALGORITHM, key, iv);
+    // Explicitly enforce 128-bit (16-byte) auth tag length before accepting the tag.
+    // This prevents tag-truncation attacks where an attacker supplies a shorter tag
+    // that may still pass verification under some implementations.
+    decipher.setAuthTagLength(16);
     decipher.setAuthTag(authTag);
     return decipher.update(encrypted, undefined, "utf8") + decipher.final("utf8");
   };

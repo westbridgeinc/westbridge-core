@@ -4,8 +4,22 @@ const findUniqueMock = vi.fn();
 const deleteMock = vi.fn();
 const createMock = vi.fn();
 const updateManyMock = vi.fn();
+
+// $transaction must execute the callback with a tx proxy that mirrors the mocked account methods
+const transactionMock = vi.fn(async (cb: (tx: unknown) => unknown) =>
+  cb({
+    account: {
+      findUnique: findUniqueMock,
+      delete: deleteMock,
+      create: createMock,
+      updateMany: updateManyMock,
+    },
+  })
+);
+
 vi.mock("@/lib/data/prisma", () => ({
   prisma: {
+    $transaction: transactionMock,
     account: {
       findUnique: findUniqueMock,
       delete: deleteMock,
@@ -30,6 +44,18 @@ describe("billing.service", () => {
     updateManyMock.mockReset();
     getPaymentLinkUrlMock.mockReset();
     getPaymentLinkUrlMock.mockReturnValue("https://checkout.example/pay");
+    // Re-wire $transaction after each reset so it still calls through with tx proxy
+    transactionMock.mockReset();
+    transactionMock.mockImplementation(async (cb: (tx: unknown) => unknown) =>
+      cb({
+        account: {
+          findUnique: findUniqueMock,
+          delete: deleteMock,
+          create: createMock,
+          updateMany: updateManyMock,
+        },
+      })
+    );
   });
 
   it("returns error when email is missing", async () => {
@@ -114,6 +140,8 @@ describe("billing.service", () => {
 
   it("markAccountPaid updates account and returns result", async () => {
     updateManyMock.mockResolvedValue({ count: 1 });
+    // markAccountPaid calls findUnique after updateMany to send activation email; return null to skip email
+    findUniqueMock.mockResolvedValue(null);
     const { markAccountPaid } = await import("./billing.service");
     const r = await markAccountPaid("acc-1", "ord-1", "cust-1");
     expect(r.ok).toBe(true);
