@@ -213,26 +213,35 @@ jobs:
           HOSTNAME: 0.0.0.0
       - name: Smoke test app + DB connectivity
         run: |
-          # Verify the app can reach the DB by hitting the health endpoint
-          curl -sf http://localhost:3000/api/health | python3 -c "import sys,json; d=json.load(sys.stdin); print('health:', d); exit(0 if d.get('data',{}).get('status') in ('healthy','degraded') else 1)"
-          # Insert a probe session and verify validate endpoint can find it
+          # Health endpoint may return 503 when Redis is down (expected in CI) but
+          # still contains DB status. Accept 200 or 503, check DB check specifically.
+          HEALTH=$(curl -s http://localhost:3000/api/health)
+          echo "Health response: $HEALTH"
+          echo "$HEALTH" | python3 -c "
+          import sys,json
+          d=json.load(sys.stdin)
+          db=d.get('data',{}).get('checks',{}).get('database',{}).get('status','')
+          print('DB status:', db)
+          exit(0 if db in ('healthy','degraded') else 1)
+          "
+          # Insert a probe session via psql and verify /api/auth/validate finds it
           PROBE_TOKEN="probe-token-for-ci-check-$(date +%s)"
           TOKEN_HASH=$(echo -n "$PROBE_TOKEN" | sha256sum | cut -d' ' -f1)
-          ACCOUNT_ID="cprobe$(date +%s | head -c 12)"
-          USER_ID="cusr$(date +%s | head -c 14)"
-          SESSION_ID="csess$(date +%s | head -c 13)"
-          PGPASSWORD=postgres psql -h localhost -U postgres -d test -c "
-            INSERT INTO accounts (id, email, company_name, plan, status, updated_at) VALUES ('$ACCOUNT_ID', 'probe@ci.test', 'CI Probe', 'Starter', 'active', NOW());
-            INSERT INTO users (id, account_id, email, role, status, updated_at) VALUES ('$USER_ID', '$ACCOUNT_ID', 'probe@ci.test', 'owner', 'active', NOW());
-            INSERT INTO sessions (id, user_id, token, expires_at) VALUES ('$SESSION_ID', '$USER_ID', '$TOKEN_HASH', NOW() + interval '7 days');
-          "
+          ACCOUNT_ID="cprobe$(date +%s)"
+          USER_ID="cusr$(date +%s | tr -d '\n')"
+          SESSION_ID="csess$(date +%s | tr -d '\n')"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d test -c "INSERT INTO accounts (id, email, company_name, plan, status, updated_at) VALUES ('$ACCOUNT_ID', 'probe@ci.test', 'CI Probe', 'Starter', 'active', NOW());"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d test -c "INSERT INTO users (id, account_id, email, role, status, updated_at) VALUES ('$USER_ID', '$ACCOUNT_ID', 'probe@ci.test', 'owner', 'active', NOW());"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d test -c "INSERT INTO sessions (id, user_id, token, expires_at) VALUES ('$SESSION_ID', '$USER_ID', '$TOKEN_HASH', NOW() + interval '7 days');"
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Cookie: westbridge_sid=$PROBE_TOKEN" http://localhost:3000/api/auth/validate)
           echo "Validate status with probe session: $HTTP_STATUS"
+          VALIDATE_BODY=$(curl -s -H "Cookie: westbridge_sid=$PROBE_TOKEN" http://localhost:3000/api/auth/validate)
+          echo "Validate body: $VALIDATE_BODY"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d test -c "DELETE FROM accounts WHERE id = '$ACCOUNT_ID';"
           if [ "$HTTP_STATUS" != "200" ]; then
             echo "FAIL: expected 200 from /api/auth/validate, got $HTTP_STATUS"
             exit 1
           fi
-          PGPASSWORD=postgres psql -h localhost -U postgres -d test -c "DELETE FROM accounts WHERE id = '$ACCOUNT_ID';"
       - name: Run E2E tests
         run: npm run test:e2e
         env:
