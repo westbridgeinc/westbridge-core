@@ -145,13 +145,17 @@ jobs:
           NEXT_PUBLIC_APP_URL: ${{ env.NEXT_PUBLIC_APP_URL }}
           NODE_ENV: production
           ENCRYPTION_KEY: ${{ env.ENCRYPTION_KEY }}
+      - name: Package build for artifact
+        # Turbopack generates chunk filenames containing colons (e.g. node:async_hooks)
+        # which upload-artifact@v4 rejects due to NTFS restrictions. Tar the
+        # entire .next/ dir first so we upload a single colon-free file.
+        run: tar -czf nextjs-build.tar.gz .next/
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: nextjs-build
-          path: .next/
+          path: nextjs-build.tar.gz
           retention-days: 1
-          include-hidden-files: true
 
   # ── E2E ─────────────────────────────────────────────────────────────────────
   e2e:
@@ -185,7 +189,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: nextjs-build
-          path: .next/
+      - name: Extract build
+        run: tar -xzf nextjs-build.tar.gz
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
       - name: Start app
@@ -227,7 +232,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: nextjs-build
-          path: .next/
+      - name: Extract build artifact
+        run: tar -xzf nextjs-build.tar.gz
 
       - name: Create release zip
         run: |
