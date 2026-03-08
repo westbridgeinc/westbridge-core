@@ -151,6 +151,7 @@ jobs:
           name: nextjs-build
           path: .next/
           retention-days: 1
+          include-hidden-files: true
 
   # ── E2E ─────────────────────────────────────────────────────────────────────
   e2e:
@@ -199,6 +200,7 @@ jobs:
           TWOCO_MERCHANT_CODE: ${{ env.TWOCO_MERCHANT_CODE }}
           TWOCO_SECRET_WORD: ${{ env.TWOCO_SECRET_WORD }}
           ENCRYPTION_KEY: ${{ env.ENCRYPTION_KEY }}
+          REDIS_PASSWORD: ci-redis-password-not-for-production
       - name: Run E2E tests
         run: npm run test:e2e
         env:
