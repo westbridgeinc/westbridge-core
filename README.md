@@ -2,6 +2,16 @@
 
 Next.js app for Westbridge — ERP integration and business management.
 
+## UI (shadcn/ui)
+
+The UI is built on **[shadcn/ui](https://github.com/shadcn-ui/ui)**. Components live in `components/ui/` and are configured via `components.json`. To add or update components from the registry:
+
+```bash
+npx shadcn@latest add <component-name>
+```
+
+You can [fork shadcn-ui/ui](https://github.com/shadcn-ui/ui) if you want to customize the registry or maintain your own variant; this repo uses the official registry and Lucide icons.
+
 ## Architecture
 
 - **Tech stack:** Next.js 16, TypeScript, Prisma (PostgreSQL), Redis, ERPNext (headless backend).
