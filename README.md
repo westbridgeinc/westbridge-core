@@ -1,59 +1,66 @@
 # Westbridge
 
-Next.js app for Westbridge — ERP integration and business management.
+Multi-tenant SaaS ERP platform built on Next.js with ERPNext as a headless backend. Invoicing, inventory, HR, payroll, CRM, and AI-powered insights — designed for small-to-medium businesses.
 
 ## Architecture
 
-- **Tech stack:** Next.js 16, TypeScript, Prisma (PostgreSQL), Redis, ERPNext (headless backend).
-- **Key directories:**
-  - `app/` — Routes (App Router), API handlers, pages.
-  - `lib/` — Business logic, services, data layer, auth, validation.
-  - `components/` — UI components (dashboard, marketing, ui).
-  - `types/` — Shared types and Zod schemas.
-  - `e2e/` — Playwright end-to-end tests.
-  - `prisma/` — Schema and migrations.
+```
+app/api/           → Route handlers (HTTP layer)
+lib/services/      → Business logic (Result<T, E> pattern)
+lib/data/          → Data access (ERPNext, Prisma, 2Checkout)
+lib/               → Cross-cutting concerns (auth, CSRF, encryption, rate limiting)
+```
+
+**Tech stack:** Next.js 16 (App Router), TypeScript, Prisma (PostgreSQL), Redis, ERPNext v16 (headless), Sentry, OpenTelemetry, PostHog.
+
+| Directory | Purpose |
+|-----------|---------|
+| `app/` | Routes, API handlers, pages (App Router) |
+| `lib/` | Business logic, services, data layer, auth, validation |
+| `components/` | UI components (dashboard, marketing, shared) |
+| `types/` | Shared types and Zod schemas |
+| `prisma/` | Database schema and migrations |
+| `e2e/` | Playwright end-to-end tests |
+| `docs/` | Architecture decision records, runbooks, policies |
 
 ## Getting started
 
-1. **Install dependencies**
+```bash
+# One-command setup (deps, Docker, migrations, dev server)
+./scripts/setup.sh
+```
 
-   ```bash
-   npm install
-   ```
+Or step by step:
 
-2. **Environment**
+```bash
+npm install
+cp .env.example .env              # fill in required values
+docker compose up -d               # Postgres, Redis, ERPNext
+npx prisma generate
+npx prisma migrate deploy
+npm run dev
+```
 
-   Copy `.env.example` to `.env` and set variables (see `.env.example`). Do not commit secrets; set `CSRF_SECRET` and production credentials via environment variables.
-
-3. **Database and services**
-
-   Using Docker:
-
-   ```bash
-   docker compose up -d
-   npx prisma db push
-   ```
-
-   Or point `DATABASE_URL` and `ERPNEXT_URL` to your own Postgres and ERPNext.
-
-4. **Run development server**
-
-   ```bash
-   npm run dev
-   ```
-
-   Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000).
 
 ## Testing
 
-- **Unit tests:** `npm test` (Vitest).
-- **E2E tests:** Start the app, then `npm run test:e2e` (Playwright). Optional: `E2E_TEST_LOGIN_EMAIL` and `E2E_TEST_LOGIN_PASSWORD` for login E2E.
-- **Coverage:** `npm run test:coverage` or `npm run test -- --coverage`.
+```bash
+npm test                           # unit tests (Vitest)
+npm run test:coverage              # with coverage report
+npm run test:e2e                   # E2E tests (Playwright, requires running app)
+```
 
 ## Deploy
 
-1. Run production readiness checks: `npm run verify:production` (requires `NODE_ENV=production` and required env vars set).
-2. Build: `npm run build`.
-3. Start: `npm start`.
+```bash
+npm run verify:production          # pre-flight checks
+npm run build                      # production build
+npm start                          # start server
+```
 
-This project uses [Next.js](https://nextjs.org). See the [Next.js documentation](https://nextjs.org/docs) for more.
+See `SETUP.md` for detailed setup, `docs/PRODUCTION-READINESS.md` for production checklist, and `CONTRIBUTING.md` for development conventions.
+
+## License
+
+[MIT](LICENSE)

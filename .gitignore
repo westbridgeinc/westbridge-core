@@ -47,7 +47,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-.venv/
-test-results/
-coverage/
+
+# generated code
+lib/generated/
+
+# IDE / tool configs
+.cursor/
 .zap/

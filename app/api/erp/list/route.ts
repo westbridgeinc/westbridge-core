@@ -82,7 +82,7 @@ export async function GET(request: Request) {
   const MAX_PAGE = 10_000;
   if (pageNum > MAX_PAGE) {
     return NextResponse.json(
-      apiError("BAD_REQUEST", , undefined, meta()),
+      apiError("BAD_REQUEST", `Page number exceeds maximum (${MAX_PAGE})`, undefined, meta()),
       { status: 400, headers: headers() }
     );
   }

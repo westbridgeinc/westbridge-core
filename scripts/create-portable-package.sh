@@ -17,8 +17,7 @@ zip -r "$OUT" westbridge \
   -x "westbridge/.venv/*" \
   -x "westbridge/lib/generated/*" \
   -x "westbridge/*.log" \
-  -x "westbridge/.DS_Store" \
-  -x "westbridge/.cursor/*"
+  -x "westbridge/.DS_Store"
 
 echo "Done: $OUT"
 echo "To run anywhere: unzip westbridge-platform.zip -d westbridge && cd westbridge && chmod +x start.sh && ./start.sh"

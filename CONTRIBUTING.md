@@ -106,7 +106,6 @@ If your PR is security-related, add the `security` label and tag a second review
 
 Don't let these patterns spread, but don't refactor them in an unrelated PR either:
 
-- `lib/ratelimit.ts` — deprecated fixed-window rate limiter. Still used by existing routes. Don't add new callers. See TD-01.
 - `app/dashboard/accounting/page.tsx` — pre-refactor page. Works but doesn't follow current patterns.
 - Most API routes don't use `createPipeline()` yet. They work; migrate when touching. See TD-05.
 

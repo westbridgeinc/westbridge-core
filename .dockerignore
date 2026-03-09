@@ -26,6 +26,4 @@ eslint.config.mjs
 
 # Docs (keep image smaller)
 docs
-WESTBRIDGE-CURSOR-BUILD-GUIDE.md
-DOWNLOAD.md
 SETUP.md
