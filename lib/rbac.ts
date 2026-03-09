@@ -128,3 +128,31 @@ export function getPermissions(role: Role): Permission[] {
 
 /** All defined roles. */
 export const ROLES: Role[] = ["owner", "admin", "manager", "member", "viewer"];
+
+// ─── ERP doctype allowlist (single source of truth for API routes) ─────────────
+
+const ERP_DOCTYPES_READ = [
+  "Sales Invoice", "Sales Order", "Purchase Invoice", "Purchase Order",
+  "Quotation", "Customer", "Supplier", "Item", "Employee",
+  "Journal Entry", "Payment Entry", "Stock Entry", "Expense Claim",
+  "Leave Application", "Salary Slip", "BOM",
+] as const;
+
+const ERP_DOCTYPES_WRITE = [
+  "Sales Invoice", "Sales Order", "Purchase Invoice", "Purchase Order",
+  "Quotation", "Customer", "Supplier", "Item", "Employee",
+  "Journal Entry", "Payment Entry", "Stock Entry", "Expense Claim",
+  "Leave Application", "Salary Slip", "BOM",
+] as const;
+
+/** Doctypes allowed for GET /api/erp/list and GET /api/erp/doc. Use in route validation. */
+export const ALLOWED_ERP_DOCTYPES_READ: ReadonlySet<string> = new Set(ERP_DOCTYPES_READ);
+
+/** Doctypes allowed for POST /api/erp/doc (create). Use in route validation. */
+export const ALLOWED_ERP_DOCTYPES_WRITE: ReadonlySet<string> = new Set(ERP_DOCTYPES_WRITE);
+
+export function isErpDoctypeAllowed(doctype: string, method: "read" | "write"): boolean {
+  return method === "read"
+    ? ALLOWED_ERP_DOCTYPES_READ.has(doctype)
+    : ALLOWED_ERP_DOCTYPES_WRITE.has(doctype);
+}

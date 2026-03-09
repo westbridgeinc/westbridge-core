@@ -6,6 +6,7 @@ import { apiSuccess, apiError, apiMeta, getRequestId } from "@/types/api";
 import { securityHeaders } from "@/lib/security-headers";
 import { checkTieredRateLimit, checkErpAccountRateLimit, getClientIdentifier, rateLimitHeaders } from "@/lib/api/rate-limit-tiers";
 import { withPermission } from "@/lib/api/middleware";
+import { ALLOWED_ERP_DOCTYPES_READ } from "@/lib/rbac";
 import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/data/prisma";
 
@@ -47,13 +48,6 @@ export async function GET(request: Request) {
   }
   const sid = erpnextSid;
 
-  const ALLOWED_DOCTYPES = new Set([
-    "Sales Invoice", "Sales Order", "Purchase Invoice", "Purchase Order",
-    "Quotation", "Customer", "Supplier", "Item", "Employee",
-    "Journal Entry", "Payment Entry", "Stock Entry", "Expense Claim",
-    "Leave Application", "Salary Slip", "BOM",
-  ]);
-
   const { searchParams } = new URL(request.url);
   const doctype = searchParams.get("doctype");
   if (!doctype) {
@@ -62,7 +56,7 @@ export async function GET(request: Request) {
       { status: 400, headers: headers() }
     );
   }
-  if (!ALLOWED_DOCTYPES.has(doctype)) {
+  if (!ALLOWED_ERP_DOCTYPES_READ.has(doctype)) {
     return NextResponse.json(
       apiError("BAD_REQUEST", "Invalid or unsupported document type", undefined, meta()),
       { status: 400, headers: headers() }

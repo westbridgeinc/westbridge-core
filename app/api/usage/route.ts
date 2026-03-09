@@ -1,38 +1,32 @@
 /**
  * GET /api/usage — current billing period usage for the authenticated account.
+ * Uses the shared API pipeline (auth, rate limit, permission, headers).
  */
 import { NextResponse } from "next/server";
-import { withPermission } from "@/lib/api/middleware";
+import {
+  createPipeline,
+  withRequestId,
+  withTracing,
+  withRateLimit,
+  withAuth,
+  withPermission,
+  withResponseTime,
+} from "@/lib/api/pipeline";
 import { meter, estimateAiCost } from "@/lib/metering";
 import { prisma } from "@/lib/data/prisma";
-import { apiSuccess, apiError, apiMeta, getRequestId } from "@/types/api";
-import { securityHeaders } from "@/lib/security-headers";
-import { checkTieredRateLimit, getClientIdentifier, rateLimitHeaders } from "@/lib/api/rate-limit-tiers";
-import * as Sentry from "@sentry/nextjs";
+import { apiSuccess, apiError, apiMeta } from "@/types/api";
 
-// User limits by plan — these mirror the plan definitions in lib/modules.ts
 const PLAN_USER_LIMITS: Record<string, number | null> = {
-  Starter:      5,
-  Growth:       25,
-  Business:     null, // unlimited
+  Starter: 5,
+  Growth: 25,
+  Business: null,
 };
 
-export async function GET(request: Request) {
-  const start = Date.now();
-  const requestId = getRequestId(request);
-  const meta = () => apiMeta({ request_id: requestId });
-  const hdrs = () => ({ ...securityHeaders(), "X-Response-Time": `${Date.now() - start}ms` });
+async function usageHandler(ctx: import("@/lib/api/pipeline").PipelineContext): Promise<NextResponse> {
+  const session = ctx.session!;
+  const meta = () => apiMeta({ request_id: ctx.requestId });
 
   try {
-    const permCheck = await withPermission(request, "billing:read");
-    if (!permCheck.ok) return permCheck.response;
-    const { session } = permCheck;
-
-    const rateLimit = await checkTieredRateLimit(getClientIdentifier(request), "authenticated", "/api/usage");
-    if (!rateLimit.allowed) {
-      return NextResponse.json(apiError("RATE_LIMIT", "Too many requests.", undefined, meta()), { status: 429, headers: { ...hdrs(), ...rateLimitHeaders(rateLimit) } });
-    }
-
     const [usage, account] = await Promise.all([
       meter.get(session.accountId),
       prisma.account.findUnique({
@@ -46,24 +40,40 @@ export async function GET(request: Request) {
     const aiCostUsd = estimateAiCost(usage.ai_tokens_input, usage.ai_tokens_output);
 
     return NextResponse.json(
-      apiSuccess({
-        period: usage.period,
-        plan,
-        usage: {
-          api_calls:       { count: usage.api_calls, limit: null },
-          erp_docs_created: { count: usage.erp_docs_created, limit: null },
-          active_users:    { count: usage.active_users_count, limit: userLimit },
-          ai_tokens:       {
-            input: usage.ai_tokens_input,
-            output: usage.ai_tokens_output,
-            cost_usd: Math.round(aiCostUsd * 100) / 100,
+      apiSuccess(
+        {
+          period: usage.period,
+          plan,
+          usage: {
+            api_calls: { count: usage.api_calls, limit: null },
+            erp_docs_created: { count: usage.erp_docs_created, limit: null },
+            active_users: { count: usage.active_users_count, limit: userLimit },
+            ai_tokens: {
+              input: usage.ai_tokens_input,
+              output: usage.ai_tokens_output,
+              cost_usd: Math.round(aiCostUsd * 100) / 100,
+            },
           },
         },
-      }, meta()),
-      { headers: hdrs() }
+        meta()
+      )
     );
-  } catch (error) {
-    Sentry.captureException(error);
-    return NextResponse.json(apiError("SERVER_ERROR", "An unexpected error occurred", undefined, meta()), { status: 500, headers: hdrs() });
+  } catch {
+    return NextResponse.json(
+      apiError("SERVER_ERROR", "An unexpected error occurred", undefined, meta()),
+      { status: 500 }
+    );
   }
 }
+
+export const GET = createPipeline(
+  [
+    withRequestId,
+    withTracing,
+    withRateLimit({ tier: "authenticated" }),
+    withAuth,
+    withPermission("billing:read"),
+    withResponseTime,
+  ],
+  usageHandler
+);

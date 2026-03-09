@@ -31,8 +31,15 @@ export async function middleware(request: NextRequest) {
         return response;
       }
     } catch {
-      // Validation service is unavailable — fail open for availability.
-      // Individual route handlers still validate sessions independently.
+      // Validation service unavailable (e.g. DB down). Behavior controlled by AUTH_FAIL_MODE:
+      // - fail_open (default): allow request through; API routes still validate and may return 503.
+      // - fail_closed: redirect to login and clear cookie so no dashboard access until service recovers.
+      const failMode = process.env.AUTH_FAIL_MODE ?? "fail_open";
+      if (failMode === "fail_closed") {
+        const response = NextResponse.redirect(new URL("/login", request.url));
+        response.cookies.delete(COOKIE.SESSION_NAME);
+        return response;
+      }
     }
   }
 

@@ -27,6 +27,7 @@ const optional = [
   "TWOCO_LINK_ENTERPRISE",
   "TWOCO_LINK_GROWTH",
   "TWOCO_LINK_BUSINESS",
+  "AUTH_FAIL_MODE", // "fail_open" | "fail_closed" — dashboard middleware when /api/auth/validate is down
 ] as const;
 
 export function validateEnv(): { ok: true } | { ok: false; missing: string[] } {

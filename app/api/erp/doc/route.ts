@@ -9,6 +9,7 @@ import { securityHeaders } from "@/lib/security-headers";
 import { reportSecurityEvent } from "@/lib/security-monitor";
 import { checkTieredRateLimit, getClientIdentifier, rateLimitHeaders } from "@/lib/api/rate-limit-tiers";
 import { withPermission } from "@/lib/api/middleware";
+import { ALLOWED_ERP_DOCTYPES_READ, ALLOWED_ERP_DOCTYPES_WRITE } from "@/lib/rbac";
 import * as Sentry from "@sentry/nextjs";
 
 const MAX_BODY_BYTES = 1_048_576;
@@ -38,13 +39,6 @@ export async function GET(request: Request) {
     );
   }
 
-  const ALLOWED_DOCTYPES = new Set([
-    "Sales Invoice", "Sales Order", "Purchase Invoice", "Purchase Order",
-    "Quotation", "Customer", "Supplier", "Item", "Employee",
-    "Journal Entry", "Payment Entry", "Stock Entry", "Expense Claim",
-    "Leave Application", "Salary Slip", "BOM",
-  ]);
-
   const { searchParams } = new URL(request.url);
   const doctype = searchParams.get("doctype");
   const name = searchParams.get("name");
@@ -54,7 +48,7 @@ export async function GET(request: Request) {
       { status: 400, headers: headers() }
     );
   }
-  if (!ALLOWED_DOCTYPES.has(doctype)) {
+  if (!ALLOWED_ERP_DOCTYPES_READ.has(doctype)) {
     return NextResponse.json(
       apiError("BAD_REQUEST", "Invalid or unsupported document type", undefined, meta()),
       { status: 400, headers: headers() }
@@ -113,6 +107,12 @@ export async function POST(request: Request) {
   const permCheck = await withPermission(request, "invoices:write");
   if (!permCheck.ok) return permCheck.response;
   const { session } = permCheck;
+  if (session.role !== "owner" && session.role !== "admin") {
+    return NextResponse.json(
+      apiError("FORBIDDEN", "Insufficient permissions", undefined, meta()),
+      { status: 403, headers: headers() }
+    );
+  }
   if (!session.erpnextSid) {
     return NextResponse.json(apiError("UNAUTHORIZED", "ERP session not available. Please log in again.", undefined, meta()), { status: 401, headers: headers() });
   }
@@ -180,13 +180,7 @@ export async function POST(request: Request) {
   const data = Object.fromEntries(
     Object.entries(rawData).filter(([k]) => !FORBIDDEN_FIELDS.has(k))
   );
-  const ALLOWED_DOCTYPES_POST = new Set([
-    "Sales Invoice", "Sales Order", "Purchase Invoice", "Purchase Order",
-    "Quotation", "Customer", "Supplier", "Item", "Employee",
-    "Journal Entry", "Payment Entry", "Stock Entry", "Expense Claim",
-    "Leave Application", "Salary Slip", "BOM",
-  ]);
-  if (!ALLOWED_DOCTYPES_POST.has(doctype)) {
+  if (!ALLOWED_ERP_DOCTYPES_WRITE.has(doctype)) {
     return NextResponse.json(
       apiError("BAD_REQUEST", "Invalid or unsupported document type", undefined, meta()),
       { status: 400, headers: headers() }

@@ -158,9 +158,8 @@ export function withAuditLog(options: { action: string }): MiddlewareFn {
 
 // ─── Pipeline factory ─────────────────────────────────────────────────────────
 
-// TODO: existing routes (erp/list, erp/doc, auth/*) still use manual middleware
-//       calls rather than createPipeline(). Migrate them incrementally — they work
-//       fine as-is, it's just boilerplate. Track in TD-06.
+// Migrated to pipeline: GET /api/usage (see app/api/usage/route.ts).
+// Other routes (erp/list, erp/doc, auth/*) can be migrated incrementally to this stack.
 
 /**
  * Create a route handler from an ordered list of middleware.

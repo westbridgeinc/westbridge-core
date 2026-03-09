@@ -1,20 +1,20 @@
 /**
  * Multi-tenancy enforcement utilities.
- * Every database query that touches tenant data MUST be wrapped in withTenant()
- * or use a Prisma client instance that has the accountId scope applied.
+ * Prefer getScopedPrisma(accountId) from lib/data/scoped-prisma for tenant-scoped
+ * reads/writes — it injects accountId into where clauses so cross-tenant queries cannot happen.
  *
- * @example
- * const invoices = await withTenant(accountId, (db) =>
- *   db.invoice.findMany({ where: { accountId } })
- * );
+ * withTenant(accountId, fn) runs fn with tenant context set and passes a scoped Prisma client
+ * so all tenant-model queries are automatically limited to that account.
  */
-import { prisma } from "@/lib/data/prisma";
+import { getScopedPrisma } from "@/lib/data/scoped-prisma";
 import type { PrismaClient } from "@/lib/generated/prisma/client";
+import { runWithTenant } from "@/lib/tenant-context";
 import { logger } from "@/lib/logger";
 
 /**
  * Execute a Prisma operation scoped to a specific tenant.
- * Validates that accountId is present and logs every cross-tenant access attempt.
+ * Uses a scoped client that injects accountId into where clauses for tenant models.
+ * Also sets tenant context (getCurrentAccountId()) for the duration of fn.
  */
 export async function withTenant<T>(
   accountId: string,
@@ -24,7 +24,8 @@ export async function withTenant<T>(
     logger.error("withTenant called without valid accountId — blocking query");
     throw new Error("TENANT_REQUIRED: accountId must be provided for all tenant-scoped queries");
   }
-  return fn(prisma);
+  const scoped = getScopedPrisma(accountId);
+  return runWithTenant(accountId, () => fn(scoped));
 }
 
 /**

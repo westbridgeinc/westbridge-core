@@ -5,6 +5,7 @@ import { apiSuccess } from "@/types/api";
 import { securityHeaders } from "@/lib/security-headers";
 import { getRedis } from "@/lib/redis";
 import { getUptimeSeconds } from "@/lib/uptime";
+import { SLOs } from "@/lib/slo";
 import os from "os";
 import packageJson from "../../../package.json";
 
@@ -112,12 +113,19 @@ export async function GET(request: Request) {
   const overallStatus: CheckStatus = allOk ? "healthy" : criticalOk ? "degraded" : "unhealthy";
   const httpStatus = overallStatus === "unhealthy" ? 503 : 200;
 
+  const sloDefinitions = Object.entries(SLOs).map(([key, slo]) => ({
+    name: key,
+    target: slo.target,
+    description: slo.description,
+  }));
+
   const body = apiSuccess(
     {
       status: overallStatus,
       version: packageJson.version,
       uptime_seconds: getUptimeSeconds(),
       checks,
+      slo_definitions: sloDefinitions,
       timestamp: new Date().toISOString(),
     },
     { request_id: requestId }
